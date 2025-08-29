@@ -1,0 +1,22 @@
+% file: objective_card.tex
+\documentclass[border=6pt]{standalone}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{xcolor}
+\usepackage{tikz}
+\newcommand{\Ind}{\mathbf{1}}
+\definecolor{cardbg}{HTML}{E8F6FB}
+
+\begin{document}
+\begin{tikzpicture}
+\node[fill=cardbg, rounded corners=8pt, inner xsep=16pt, inner ysep=14pt, draw=none] (B) {%
+\(\displaystyle
+\begin{aligned}
+f(x)
+&= \underbrace{\frac{1}{T}\int_{0}^{T}\Ind\{70 \le G_{x}(t) \le 180\}\,dt}_{\mathrm{TIR}_{70\text{--}180}(x)} \\[2pt]
+&\quad -\, \underbrace{w_{\mathrm{hypo}}\frac{1}{T}\int_{0}^{T}\!\left(\frac{\max\{0,\,70 - G_{x}(t)\}}{10\,\mathrm{mg/dL}}\right)^{2}\! dt}_{P_{\mathrm{hypo}}(x)} \\[2pt]
+&\quad -\, \underbrace{w_{\mathrm{hyper}}\frac{1}{T}\int_{0}^{T}\!\left(\frac{\max\{0,\,G_{x}(t) - 180\}}{30\,\mathrm{mg/dL}}\right) dt}_{P_{\mathrm{hyper}}(x)} \, .
+\end{aligned}
+\)}
+;
+\end{tikzpicture}
+\end{document}
