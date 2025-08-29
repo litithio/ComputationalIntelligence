@@ -78,7 +78,7 @@
 In der intensivierten Insulintherapie (ICT) ist es zentral, die Zeit im Zielbereich (TIR) zu maximieren und Hypoglykämien konsequent zu vermeiden. Dabei sollen Modellannahmen und Sicherheitsgrenzen so gewählt werden, dass sie klinisch plausibel und transparent sind.
 
 \paragraph{Ziel und Setup.}
-Wir optimieren die drei mahlzeitenspezifischen \IKRtxtpl{} \(x=(\ICRf,\ICRm,\ICRa)\). Jede Kandidateneinstellung wird mit einem digitalen Zwilling über einen 24‑h‑Horizont \([0,T]\) mit \(T=24\,\mathrm{h}\) simuliert und bewertet. Sicherheitsrelevante Nebenbedingungen (konstante Basalrate, tageszeitliche Fenster, Mindestabstand zwischen Bolusgaben, prädiktive Low‑Sperre für Korrekturen, Schrittbegrenzung zwischen Runden) sichern die klinische Plausibilität ab. Wichtige Symbole sind in Tabelle~\ref{tab:notation} zusammengefasst.
+Wir optimieren die drei mahlzeitenspezifischen \IKRtxtpl{} \(x=(\ICRf,\ICRm,\ICRa)\). Jede Kandidateneinstellung wird mit einem digitalen Zwilling über einen 24‑h‑Horizont \([0,T]\) mit \(T=24\,\mathrm{h}\) simuliert und bewertet. Sicherheitsrelevante Nebenbedingungen (konstante Basalrate, tageszeitliche Fenster, Mindestabstand zwischen Bolusgaben, Schrittbegrenzung zwischen Runden) sichern die klinische Plausibilität ab. Wichtige Symbole sind in Tabelle~\ref{tab:notation} zusammengefasst.
 
 
 \paragraph{Digital Decision Maker (Begründung)}
@@ -142,15 +142,18 @@ $\tau_n$                    & Zeitpunkt der $n$-ten Bolusgabe (Ereigniszeit). \\
 $\Delta_{\min}$             & Mindestabstand zwischen Bolusgaben; hier $\Delta_{\min}=\Dtmin$. \\
 $\mathrm{tod}(t)$           & Tageszeitabbildung $t \mapsto t \bmod 24\,\mathrm{h}\in[0,24\,\mathrm{h})$. \\
 $r_{\text{screen}}$         & Harter Verhältnis-Screen (z. B. 2.0). \\
-\(N_{\max}\)                  & Max. Anzahl zu simulierender Nachbarn (z. B. 10). \\
 $\mathcal W_{\mathrm{Morgen}}$, $\mathcal W_{\mathrm{Mittag}}$, $\mathcal W_{\mathrm{Abend}}$, $\mathcal W_{\mathrm{Nacht}}$ & Tageszeitfenster f\"ur Fr\"uhst\"uck/Mittag/Abend/Nacht (vgl. Simulationsregeln). \\
 $\ICR(t)$                  & Aktiver ICR zum Zeitpunkt $t$ (st\"uckweise konstant \"uber die Fenster). \\
 $\DICR$                    & Maximal zul\"assige \"Anderung je ICR pro Optimierungsrunde (Schrittbegrenzung). \\
 $r(x),\,\tilde r(x)$      & Verh\"altnis $\max/\min$ der ICRs und logarithmische \"Uberschreitung f\"ur den Guardrail. \\
 $\rmax,\,\lambdadisp$    & Schwellwert des Verh\"altnisses bzw. Gewicht der Dispersionsstrafe. \\
+% --- Neue Zeilen: Gauß-Batch-Notation ---
+$\mathcal B(x)$           & Gau{\ss}\-Batch an Vorschl\"agen um $x$ (stochastische Kandidatenbildung). \\
+$B$                        & Batchgr\"o\ss e der Gau{\ss}\-Proposals pro Iteration (z.\,B. 8). \\
+$p(\text{G1}),\,p(\text{G2})$ & Auswahlwahrscheinlichkeiten f\"ur Einzel\-Gen vs. gemeinsamen Shift (z.\,B. 0.8\,/\,0.2). \\
+$\rho_{\mathrm{mut}}$           & Mutationsrate pro Iteration (Wahrscheinlichkeit, dass mutiert wird; Standard: $0{,}3$). \\
+$\tau_{<70},\,\tau_{<54},\,\tau_{>180}$ & Sicherheitsgrenzen f\"ur TBR(<70), TBR(<54), TAR(>180) (z.\,B. in h/Tag oder \%). \\
 $P_{\mathrm{disp}}(x)$    & Dispersions\,–\,Penalty (weiche Homogenit\"atsstrafe). \\
-$\mathcal N(x)$           & Nachbarschaft um $x$ (deterministische Kandidatenbildung). \\
-$S_{\text{loc}},\,S_{\text{all}}$ & Schrittmengen f\"ur lokale bzw. gemeinsame Shifts. \\
 $F_q(x)$                  & Quartalsbewertung (Szenario\,–\,Mittel \"uber $M$ Tage). \\
 $\mathcal P_q$            & Verteilung der Tageszust\"ande im Quartal $q$. \\
 $M$                       & Anzahl simulierte Tage im Quartal. \\
@@ -215,33 +218,28 @@ Der gemeinsame Shift (alle drei ICRs um denselben kleinen Betrag) bildet reale, 
 \paragraph{Hinweis zur Homogenitätsstrafe}
 Der gemeinsame Kleinst-Shift (G2) ist \emph{maßstabsnah} und ändert das Verhältnis \(r(x)=\tfrac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}}\) kaum; damit bleibt der optionale Verhältnis-Guardrail \(P_{\mathrm{disp}}(x)\) in der Regel unverändert. Der Einzel-Gen-Schritt (G1) kann \(r(x)\) vergrößern; überschreitet er die Toleranz \(\rmax\), greift die weiche Strafe (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
 
-\paragraph{Nachbarschaftsbasierte Kandidatenerzeugung.}
-Anstelle rein zufälliger Mutationen prüfen wir zunächst eine kleine, deterministische Nachbarschaft um \(x\), um schlechte Nachkommen zu vermeiden und Evaluationszeit zu sparen. Definiere die Schrittmengen \(S_{\text{loc}}=\{0.25,\,0.5\}\,\mathrm{g/U}\) und \(S_{\text{all}}=\{0.25\}\,\mathrm{g/U}\).
-Mit den kanonischen Einheitsvektoren \(e_j\) und der Projektion \(\Pi_{[5,30]^3}\) sei
-\[
-\begin{aligned}
-\mathcal{N}(x)
-&= \Big\{\, \Pi_{[5,30]^3}\!\big(x+\delta\,e_j\big)\ \big|\ j\in\{f,m,a\},\ \delta\in\{\pm s : s\in S_{\text{loc}}\},\ |\delta|\le \DICR \,\Big\}\\
-&\quad\cup\ \Big\{\, \Pi_{[5,30]^3}\!\big(x+\delta\,\mathbf{1}\big)\ \big|\ \delta\in\{\pm s : s\in S_{\text{all}}\},\ |\delta|\le \DICR \,\Big\}.
-\end{aligned}
-\]
-Duplikate nach der Projektion werden entfernt. Box-Grenzen, Schrittbegrenzung und (optional) Dispersions-Penalty bleiben so automatisch erfüllt.
+\paragraph{Gaussian\-Batch\-Proposals}
+Pro Iteration erzeugen wir einen stochastischen \emph{Batch} von $B$ Kandidaten um den aktuellen Elternvektor $x$, basierend auf den Gau{\ss}\-Mutationen aus Abschnitt \emph{Mutationsoperatoren}:
+\begin{itemize}
+  \item Ziehe f\"ur jedes der $B$ Elemente unabh\"angig einen Operator: G1 (Einzel\-Gen) mit Wahrscheinlichkeit $p(\mathrm{G1})$ oder G2 (gemeinsamer Shift) mit $p(\mathrm{G2})$ (Standard: $0{,}8/0{,}2$).
+  \item G1: W\"ahle $j\in\{f,m,a\}$ gleichverteilt, ziehe $\delta\sim\mathcal N(0,\sigma_{\text{loc}}^2)$, trunkiert auf $[-\Delta_{\mathrm{ICR}},\Delta_{\mathrm{ICR}}]$, setze $\ICR'_j=\ICR_j+\delta$.
+  \item G2: Ziehe $\delta\sim\mathcal N(0,\sigma_{\text{all}}^2)$, trunkiert auf $[-\Delta_{\mathrm{ICR}},\Delta_{\mathrm{ICR}}]$, setze $x'=x+\delta\,\mathbf 1$.
+  \item Projiziere stets komponentenweise auf die Box $[5,30]^3$ (Clippen), so dass alle Vorschl\"age zul\"assig bleiben und die Schrittbegrenzung je Runde eingehalten ist.
+\end{itemize}
+Damit entf\"allt die fr\"uhere deterministische Nachbarschaft $\mathcal N(x)$; kleine, klinisch plausible Schritte entstehen nat\"urlich durch die Gau{\ss}\-Kerne.
 
-\paragraph{Schnell-Screening vor der Simulation.}
-Kandidaten, die den Verhältnis-Screen \(r(x')>r_{\text{screen}}\) überschreiten (z.\,B. \(r_{\text{screen}}=2.0\)), werden \emph{vor} der teuren Simulation verworfen; der optionale weiche Guardrail \(P_{\mathrm{disp}}\) wirkt weiter im Bereich \(r(x')\le r_{\text{screen}}\).
-Optional begrenzen wir die zu simulierenden Nachbarn auf \(N_{\max}\) (z.\,B. 10), wobei wir kleinere Schritte bevorzugen.
+\paragraph{Schnell\-Screening vor der Simulation.}
+Vorschl\"age mit zu starker Spreizung der ICRs werden bereits \emph{vor} der teuren Simulation verworfen: Falls der harte Verh\"altnis\-Screen $r(x')>r_{\text{screen}}$ (z.\,B. $r_{\text{screen}}=2.0$), wird der Kandidat gedroppt. Der optionale weiche Guardrail $P_{\mathrm{disp}}$ wirkt weiterhin im zul\"assigen Bereich $r(x')\le r_{\text{screen}}$. Wir simulieren anschlie\ss end h\"ochstens die verbleibenden $B$ Vorschl\"age dieser Iteration.
 
 \paragraph{Auswahlregel pro Iteration.}
-(1) \(\mathcal{N}(x)\) erzeugen; (2) alle zulässigen Nachbarn simulieren und bewerten; (3) \emph{best-improving} übernehmen.
-Falls keine Verbesserung erzielt wird, erlauben wir mit kleiner Wahrscheinlichkeit (z.\,B. 0.2) zusätzlich eine zufällige G1-Mutation, um lokale Minima zu verlassen.
-Dieser Mix aus deterministischer Nachbarschaft und gelegentlicher Exploration reduziert schlechte Nachkommen und hält die Suche effizient.
+(1) Gau{\ss}\-Batch $\mathcal B(x)$ mit $B$ Vorschl\"agen erzeugen; (2) nach Schnell\-Screening alle zul\"assigen Kandidaten simulieren und bewerten; (3) \emph{best\-improving} \"ubernimmt den Elternplatz. F\"allt keine Verbesserung an, erlauben wir mit kleiner Wahrscheinlichkeit (z.\,B. 0.2) einen zus\"atzlichen zuf\"alligen G1\-Kick mit leicht erh\"ohter Varianz, um lokale Plateaus zu verlassen. Dieser Mix aus stochastisch kleinen Schritten und sparsamer Exploration h\"alt die Suche effizient und klinisch plausibel.
 
 
 \section{Nebenbedingungen auf der Entscheidungsvariable}
 
 % --- Schrittbegrenzung zwischen Optimierungsrunden --------------
 
-\paragraph{Schrittbegrenzung zwischen Optimierungsrunden.} Sei \(\DICR\) die maximal zulässige Änderung eines \(\ICR\)-Wertes pro Optimierungsrunde (z.\,B. \(\DICR=0{,}5\,\mathrm{g}/\mathrm{E}\)). Diese Nebenbedingung begrenzt die Schrittweite zwischen zwei Runden \(q-1 \to q\) und unterstützt eine sichere, nachvollziehbare Anpassung der Parameter.
+\paragraph{Schrittbegrenzung zwischen Optimierungsrunden.} Sei \(\DICR\) die maximal zulässige Änderung eines \(\ICR\)-Wertes pro Optimierungsrunde (z.\,B. \(\DICR=0{,}5\,\mathrm{g}/\mathrm{U}\)). Diese Nebenbedingung begrenzt die Schrittweite zwischen zwei Runden \(q-1 \to q\) und unterstützt eine sichere, nachvollziehbare Anpassung der Parameter.
 % Quartals-Index q = 1,2,... ; j \in \{f,m,a\} (Früh, Mittag, Abend).
 \[
 \bigl|\,\ICR_j^{(q)} - \ICR_j^{(q-1)}\,\bigr| \;\le\; \DICR,
@@ -331,10 +329,7 @@ Sei \(\Dtmin\) der festgelegte Mindestabstand zwischen zwei Bolusgaben (hier: \(
 \tau_{n+1} - \tau_n \;\ge\; \Dtmin \qquad \forall\, n=1,\dots,N-1.
 \]
 
-% --- Prädiktive Low-Sperre (Gating) für Korrekturboli -----------
-\newcommand{\Hgate}{60\,\mathrm{min}}             % Vorhersagehorizont
-\newcommand{\Kg}{K_{\mathrm{gate}}}               % = ceil(H_gate / Δt)
-\newcommand{\gammalow}{\gamma_{\mathrm{low}}}     % Low-Schwelle (Standard 70 mg/dL)
+
 
 \section{Auswertung und Ergebnisse}
 
