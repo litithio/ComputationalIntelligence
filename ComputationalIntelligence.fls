@@ -148,8 +148,14 @@ INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/grfext/grfext.sty
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-OUTPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
 OUTPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.pdf
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+INPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
+OUTPUT /Users/johannesullrich/Documents/Master Studium/Methoden der künstlichen Intelligenz und Computational Intelligence/ComputationalIntelligence.out
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-cmr.cfg
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-cmr.cfg
 INPUT /usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-cmr.cfg

@@ -38,6 +38,8 @@
 \newcommand{\rmax}{r_{\max}}
 
 \newcommand{\lambdadisp}{\lambda_{\mathrm{disp}}}
+\newcommand{\sigmaloc}{\sigma_{\mathrm{loc}}}
+\newcommand{\sigmaall}{\sigma_{\mathrm{all}}}
 
 % Konsistente Schreibweise für Insulin–Kohlenhydrat‑Verhältnis(se)
 \newcommand{\IKRtxt}{Insulin\-/Kohlenhydrat\-/Ver\-h\"altnis}
@@ -197,14 +199,21 @@ Die Mahlzeitenbolusgabe richtet sich nach den angek\"undigten Kohlenhydraten \(C
 \paragraph{Mutationsoperatoren}
 Wir verwenden zwei Mutationsoperatoren für die ICR-Gene. Beide respektieren die Box-Grenzen \([5,30]\) und die Schrittbegrenzung pro Runde (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
 \begin{itemize}
-  \item[\textbf{M1}] \textbf{Einzel-Gen-Jitter:} Ein zufällig gewähltes Gen \(\ICR_j\) wird um einen kleinen Wert \(\delta\sim\mathcal{U}(-1,1)\) verändert: \(\ICR'_j=\ICR_j+\delta\). Anschließend Projektion auf \([5,30]\) und ggf. Clipping auf \(\pm\DICR\).
-  \item[\textbf{M2}] \textbf{Gemeinsamer Kleinst-Shift:} Alle drei Gene werden gemeinsam um denselben kleinen Wert \(\delta\sim\mathcal{U}(-0.5,0.5)\) verschoben: \(x' = x + \delta\,\mathbf{1}\). Danach Projektion auf \([5,30]^3\) und ggf. Clipping auf \(\pm\DICR\).
+  \item[\textbf{G1}] \textbf{Einzel-Gen (Gauß):} Wähle \(j\in\{f,m,a\}\) gleichverteilt. Ziehe \(\delta \sim \mathcal N(0,\sigmaloc^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(\ICR'_j=\ICR_j+\delta\) und lasse die anderen Gene unverändert; projiziere dann \(x'\) komponentenweise auf \([5,30]\).
+  \item[\textbf{G2}] \textbf{Gemeinsamer Shift (Gauß):} Ziehe \(\delta \sim \mathcal N(0,\sigmaall^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(x' = x + \delta\,\mathbf{1}\) und projiziere auf \([5,30]^3\).
 \end{itemize}
-Die Mutationsrate pro Nachkomme beträgt \(\rho_{\mathrm{mut}}=0.3\); die Auswahlwahrscheinlichkeiten sind \(p(\text{M1})=0.8\), \(p(\text{M2})=0.2\).\\
+Startwerte: \(\sigmaloc=0{,}3\,\mathrm{g/U}\), \(\sigmaall=0{,}2\,\mathrm{g/U}\).
+\(\rho_{\mathrm{mut}}=0.3\); die Auswahlwahrscheinlichkeiten sind \(p(\text{G1})=0.8\), \(p(\text{G2})=0.2\).\\
 \emph{Notation:} \(\Pi_{[a,b]}\) bezeichnet die Projektion auf das Intervall \([a,b]\); \(\Pi_{[5,30]^3}\) ist die komponentenweise Projektion auf das kartesische Produkt.
 
+\paragraph{Warum Gauß-Mutationen?}
+Wir verwenden Gauß‑Mutationen, d.\,h.\ Änderungen sind zentriert um \(0\) und kleine Schritte treten viel häufiger auf als große. Das spiegelt die klinische Realität vorsichtiger, iterativer Feinanpassungen wider und reduziert unplausible Sprünge. Durch Trunkierung auf \([-\DICR,\DICR]\) und anschließendes Clipping auf \([5,30]\) bleiben Sicherheitsgrenzen gewahrt.
+
+\paragraph{Klinische Begründung für den gemeinsamen Shift}
+Der gemeinsame Shift (alle drei ICRs um denselben kleinen Betrag) bildet reale, systemweite Veränderungen des Insulinbedarfs ab. Beispiele: akute Infekte, Fieber, Stress oder die Gabe von Kortikosteroiden erhöhen den Bedarf (alle ICRs verschieben sich nach unten = mehr Insulin pro g KH); mehr Bewegung, Gewichtsverlust oder eine Zunahme der Insulinsensitivität senken ihn (alle ICRs nach oben). Auch Daumenregeln wie die 500/450‑Regel koppeln ICR grob an die Gesamttagesdosis; ändert sich diese global, verschieben sich die ICRs konsistent. Der Shift verändert somit das \emph{Niveau}, während der Einzel‑Gen‑Jitter die \emph{Form} (Früh vs.\ Mittag vs.\ Abend) justiert. Trunkierung/Clipping stellt sicher, dass klinische Grenzen (\([5,30]\) g/U, \(\pm\DICR\)) eingehalten werden.
+
 \paragraph{Hinweis zur Homogenitätsstrafe}
-Der gemeinsame Kleinst-Shift (M2) ist \emph{maßstabsnah} und ändert das Verhältnis \(r(x)=\tfrac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}}\) kaum; damit bleibt der optionale Verhältnis-Guardrail \(P_{\mathrm{disp}}(x)\) in der Regel unverändert. Der Einzel-Gen-Jitter (M1) kann \(r(x)\) vergrößern; überschreitet er die Toleranz \(\rmax\), greift die weiche Strafe (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
+Der gemeinsame Kleinst-Shift (G2) ist \emph{maßstabsnah} und ändert das Verhältnis \(r(x)=\tfrac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}}\) kaum; damit bleibt der optionale Verhältnis-Guardrail \(P_{\mathrm{disp}}(x)\) in der Regel unverändert. Der Einzel-Gen-Schritt (G1) kann \(r(x)\) vergrößern; überschreitet er die Toleranz \(\rmax\), greift die weiche Strafe (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
 
 \paragraph{Nachbarschaftsbasierte Kandidatenerzeugung.}
 Anstelle rein zufälliger Mutationen prüfen wir zunächst eine kleine, deterministische Nachbarschaft um \(x\), um schlechte Nachkommen zu vermeiden und Evaluationszeit zu sparen. Definiere die Schrittmengen \(S_{\text{loc}}=\{0.25,\,0.5\}\,\mathrm{g/U}\) und \(S_{\text{all}}=\{0.25\}\,\mathrm{g/U}\).
@@ -224,7 +233,7 @@ Optional begrenzen wir die zu simulierenden Nachbarn auf \(N_{\max}\) (z.\,B. 10
 
 \paragraph{Auswahlregel pro Iteration.}
 (1) \(\mathcal{N}(x)\) erzeugen; (2) alle zulässigen Nachbarn simulieren und bewerten; (3) \emph{best-improving} übernehmen.
-Falls keine Verbesserung erzielt wird, erlauben wir mit kleiner Wahrscheinlichkeit (z.\,B. 0.2) zusätzlich eine zufällige M1-Mutation, um lokale Minima zu verlassen.
+Falls keine Verbesserung erzielt wird, erlauben wir mit kleiner Wahrscheinlichkeit (z.\,B. 0.2) zusätzlich eine zufällige G1-Mutation, um lokale Minima zu verlassen.
 Dieser Mix aus deterministischer Nachbarschaft und gelegentlicher Exploration reduziert schlechte Nachkommen und hält die Suche effizient.
 
 
