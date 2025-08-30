@@ -1,0 +1,66 @@
+\section{Gen-String \& Encoding}
+
+\paragraph{Gen-String \& Encoding}
+Wir optimieren die drei Mahlzeitenfaktoren (\IKRtxtpl):
+\[
+x \;=\; (\ICRf,\ \ICRm,\ \ICRa)^\top \in \mathbb{R}^3,
+\]
+wobei \(\mathrm{ICR}_j\) in \([\text{g KH} / \text{U Insulin}]\) gemessen wird und die Box-Grenzen
+\[
+5 \;\le\; \mathrm{ICR}_j \;\le\; 30 \qquad \text{für } j \in \{f,m,a\}
+\]
+
+gelten.
+
+\paragraph{Begründung der Box-Grenzen (5--30 g/U)}
+Die Schranken wirken \emph{auf den Faktor} (Verhältnis in g/U), nicht auf die Bolusdosis. Sie dienen drei Zielen:
+\begin{itemize}
+  \item \textbf{Klinische Plausibilität.} Bei Erwachsenen liegen typische ICRs häufig im Bereich 10--20 g/U; morgens sind stärkere Faktoren (5--12 g/U) üblich, abends eher 12--20 g/U. Werte weit außerhalb von 5--30 g/U sind selten und deuten meist auf Sondersituationen (Infekt, Steroide, ausgeprägte Insulinresistenz) hin.
+  \item \textbf{Sicherheit und numerische Stabilität.} Sehr kleine ICRs (\(<5\) g/U) führen bei üblichen Mahlzeiten zu sehr großen Bolusdosen (Hypo-Risiko), sehr große ICRs (\(>30\) g/U) zu praktisch keiner Abdeckung (Hyper-Risiko). Die Box verhindert degenerierte Lösungen des Optimierers.
+  \item \textbf{Interpretierbarkeit und Suchraumbegrenzung.} Der Suchraum bleibt kompakt und die Gewichte der Zielfunktion stabil kalibrierbar. Die Grenzen sind \emph{patientenspezifisch anpassbar} (z.\,B. 6--24 g/U), falls klinische Daten abweichende Bereiche nahelegen.
+\end{itemize}
+Die Bolusdosis zur Mahlzeit ergibt sich weiterhin aus \(B_{\mathrm{meal}}(t)=C(t)/\ICR(t)\) und wird \emph{nicht} direkt beschränkt; die Box-Grenzen betreffen ausschließlich die Entscheidungsvariablen \(x=(\ICRf,\ICRm,\ICRa)\).
+
+
+\paragraph{Semantik des Gen-Strings}
+Jede Komponente von \(x=(\ICRf,\ICRm,\ICRa)\) steht für das \IKRtxt{} der jeweiligen Mahlzeitenperiode (Früh, Mittag, Abend). Der Gen\,\(\to\)\,Phänotyp-\emph{Mapping} erfolgt \emph{zeitbasiert}: Die in Abschnitt \emph{Simulationsregeln des digitalen Zwillings} definierten Fenster \(\mathcal W_{\mathrm{Morgen}},\mathcal W_{\mathrm{Mittag}},\mathcal W_{\mathrm{Abend}}\) bestimmen, welcher ICR-Wert zu einem Zeitpunkt \(t\) gilt; formal \(\ICR(t)\in\{\ICRf,\ICRm,\ICRa\}\) mit der dort angegebenen Stückweise-Definition. Damit ist klar nachvollziehbar, welcher Genwert welches Tageszeitfenster steuert.
+
+\paragraph{Warum diese Kodierung?}
+Die dreidimensionale Kodierung ist (i) \emph{klinisch interpretierbar} und entspricht gelebter Praxis, (ii) \emph{identifizierbar} und stabil gegen\"uber Rauschen (kleiner Suchraum, weniger Overfitting), (iii) \emph{kompatibel} mit der Quartalslogik: \(x\) bleibt im Quartal konstant und wird nur an Quartalsgrenzen angepasst (vgl. Schrittbegrenzung). Eine explizite Optimierung von Boluszeitpunkten oder Basalprofilen wird bewusst vermieden, um die Komplexit\"at niedrig zu halten.
+
+\paragraph{Bolusberechnung im Simulator (zur Einordnung).}
+Die Mahlzeitenbolusgabe richtet sich nach den angek\"undigten Kohlenhydraten \(C(t)\) [g] zum Zeitpunkt \(t\) und dem aktiven Verh\"altnis: \[B_{\mathrm{meal}}(t)\;=\;\frac{C(t)}{\ICR(t)}.\] Korrekturboli (falls im Zwilling aktiv) sind \emph{nicht} Teil der Entscheidungsvariable und folgen einer fixen Regel; sie beeinflussen \(x\) nicht und werden in den Sicherheitskriterien (TBR/TAR) indirekt bewertet.
+
+
+\paragraph{Mutationsoperatoren}
+Wir verwenden zwei Mutationsoperatoren für die ICR-Gene. Beide respektieren die Box-Grenzen \([5,30]\) und die Schrittbegrenzung pro Runde (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
+\begin{itemize}
+  \item[\textbf{M1}] \textbf{Einzel-Gen-Jitter:} Ein zufällig gewähltes Gen \(\ICR_j\) wird um einen kleinen Wert \(\delta\sim\mathcal{U}(-1,1)\) verändert: \(\ICR'_j=\ICR_j+\delta\). Anschließend Projektion auf \([5,30]\) und ggf. Clipping auf \(\pm\DICR\).
+  \item[\textbf{M2}] \textbf{Gemeinsamer Kleinst-Shift:} Alle drei Gene werden gemeinsam um denselben kleinen Wert \(\delta\sim\mathcal{U}(-0.5,0.5)\) verschoben: \(x' = x + \delta\,\mathbf{1}\). Danach Projektion auf \([5,30]^3\) und ggf. Clipping auf \(\pm\DICR\).
+\end{itemize}
+Die Mutationsrate pro Nachkomme beträgt \(\rho_{\mathrm{mut}}=0.3\); die Auswahlwahrscheinlichkeiten sind \(p(\text{M1})=0.8\), \(p(\text{M2})=0.2\).\\
+\emph{Notation:} \(\Pi_{[a,b]}\) bezeichnet die Projektion auf das Intervall \([a,b]\); \(\Pi_{[5,30]^3}\) ist die komponentenweise Projektion auf das kartesische Produkt.
+
+\paragraph{Hinweis zur Homogenitätsstrafe}
+Der gemeinsame Kleinst-Shift (M2) ist \emph{maßstabsnah} und ändert das Verhältnis \(r(x)=\tfrac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}}\) kaum; damit bleibt der optionale Verhältnis-Guardrail \(P_{\mathrm{disp}}(x)\) in der Regel unverändert. Der Einzel-Gen-Jitter (M1) kann \(r(x)\) vergrößern; überschreitet er die Toleranz \(\rmax\), greift die weiche Strafe (vgl. Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}).
+
+\paragraph{Nachbarschaftsbasierte Kandidatenerzeugung.}
+Anstelle rein zufälliger Mutationen prüfen wir zunächst eine kleine, deterministische Nachbarschaft um \(x\), um schlechte Nachkommen zu vermeiden und Evaluationszeit zu sparen. Definiere die Schrittmengen \(S_{\text{loc}}=\{0.25,\,0.5\}\,\mathrm{g/U}\) und \(S_{\text{all}}=\{0.25\}\,\mathrm{g/U}\).
+Mit den kanonischen Einheitsvektoren \(e_j\) und der Projektion \(\Pi_{[5,30]^3}\) sei
+\[
+\begin{aligned}
+\mathcal{N}(x)
+&= \Big\{\, \Pi_{[5,30]^3}\!\big(x+\delta\,e_j\big)\ \big|\ j\in\{f,m,a\},\ \delta\in\{\pm s : s\in S_{\text{loc}}\},\ |\delta|\le \DICR \,\Big\}\\
+&\quad\cup\ \Big\{\, \Pi_{[5,30]^3}\!\big(x+\delta\,\mathbf{1}\big)\ \big|\ \delta\in\{\pm s : s\in S_{\text{all}}\},\ |\delta|\le \DICR \,\Big\}.
+\end{aligned}
+\]
+Duplikate nach der Projektion werden entfernt. Box-Grenzen, Schrittbegrenzung und (optional) Dispersions-Penalty bleiben so automatisch erfüllt.
+
+\paragraph{Schnell-Screening vor der Simulation.}
+Kandidaten, die den Verhältnis-Screen \(r(x')>r_{\text{screen}}\) überschreiten (z.\,B. \(r_{\text{screen}}=2.0\)), werden \emph{vor} der teuren Simulation verworfen; der optionale weiche Guardrail \(P_{\mathrm{disp}}\) wirkt weiter im Bereich \(r(x')\le r_{\text{screen}}\).
+Optional begrenzen wir die zu simulierenden Nachbarn auf \(N_{\max}\) (z.\,B. 10), wobei wir kleinere Schritte bevorzugen.
+
+\paragraph{Auswahlregel pro Iteration.}
+(1) \(\mathcal{N}(x)\) erzeugen; (2) alle zulässigen Nachbarn simulieren und bewerten; (3) \emph{best-improving} übernehmen.
+Falls keine Verbesserung erzielt wird, erlauben wir mit kleiner Wahrscheinlichkeit (z.\,B. 0.2) zusätzlich eine zufällige M1-Mutation, um lokale Minima zu verlassen.
+Dieser Mix aus deterministischer Nachbarschaft und gelegentlicher Exploration reduziert schlechte Nachkommen und hält die Suche effizient.

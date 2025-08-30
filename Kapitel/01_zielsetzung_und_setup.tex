@@ -1,0 +1,89 @@
+\section{Zielsetzung, Setup und Zielfunktion}
+
+\paragraph{Motivation}
+In der intensivierten Insulintherapie (ICT) ist es zentral, die Zeit im Zielbereich (TIR) zu maximieren und Hypoglykämien konsequent zu vermeiden. Dabei sollen Modellannahmen und Sicherheitsgrenzen so gewählt werden, dass sie klinisch plausibel und transparent sind.
+
+\paragraph{Ziel und Setup.}
+Wir optimieren die drei mahlzeitenspezifischen \IKRtxtpl{} \(x=(\ICRf,\ICRm,\ICRa)\). Jede Kandidateneinstellung wird mit einem digitalen Zwilling über einen 24‑h‑Horizont \([0,T]\) mit \(T=24\,\mathrm{h}\) simuliert und bewertet. Sicherheitsrelevante Nebenbedingungen (konstante Basalrate, tageszeitliche Fenster, Mindestabstand zwischen Bolusgaben, prädiktive Low‑Sperre für Korrekturen, Schrittbegrenzung zwischen Runden) sichern die klinische Plausibilität ab. Wichtige Symbole sind in Tabelle~\ref{tab:notation} zusammengefasst.
+
+
+\paragraph{Digital Decision Maker (Begründung)}
+Statt menschlicher Heuristik entscheidet ein \emph{digitaler Entscheider} datenbasiert: (i) klare Zielfunktion (TIR$\uparrow$; Hypo \emph{quadratisch} stärker als Hyper, normiert), (ii) patientenspezifische Simulation mit digitalem Zwilling (24 h, realistische Regeln), (iii) transparente, klinisch interpretierbare Parameter (drei ICR je Tagesfenster), (iv) sichere, nachvollziehbare Anpassung (Box-Grenzen, Schrittbegrenzung, optionaler Homogenitäts-Guardrail). Der Ansatz ist robust, erweiterbar (z.\,B. Fett/Protein, AID) und ersetzt Bauchgefühl durch reproduzierbare Entscheidungen.
+
+\paragraph{Zielfunktion}
+\begin{align}
+f(x)
+&= \phantom{-\,w_{\mathrm{hypo}}\,}\underbrace{\frac{1}{T}\int_{0}^{T}\Ind\{70 \le G_{x}(t) \le 180\}\,dt}_{\mathrm{TIR}_{70\text{--}180}(x)} \nonumber\\
+&\ - \underbrace{w_{\mathrm{hypo}}\,\frac{1}{T}\int_{0}^{T}\left(\frac{\max\{0,\,70 - G_{x}(t)\}}{\Hhypo}\right)^{2}\,dt}_{P_{\mathrm{hypo}}(x)} \nonumber\\
+&\ - \underbrace{w_{\mathrm{hyper}}\,\frac{1}{T}\int_{0}^{T}\left(\frac{\max\{0,\,G_{x}(t) - 180\}}{\Hhyper}\right)\,dt}_{P_{\mathrm{hyper}}(x)}.
+\end{align}
+
+\paragraph{Normierung der Strafterme}
+
+Die Konstanten $H_{\text{hypo}}=\Hhypo$ und $H_{\text{hyper}}=\Hhyper$ skalieren die Amplituden der Abweichungen, so dass die Gewichte $w_{\mathrm{hypo}}$ und $w_{\mathrm{hyper}}$ dimensionslos interpretiert werden können. Eine Hypo-Tiefe von $10\,\mathrm{mg/dL}$ (z.\,B. $60\,\mathrm{mg/dL}$) entspricht damit dem Wert $1$ (vor Gewichtung) im quadratischen Term; ein Hyper-Überschuss von $30\,\mathrm{mg/dL}$ (z.\,B. $210\,\mathrm{mg/dL}$) entspricht dem Wert $1$ (vor Gewichtung) im linearen Term.
+
+\paragraph{Kalibrierung der Gewichte}
+Startwerte: \(w_{\mathrm{hypo}}=1\), \(w_{\mathrm{hyper}}=0{,}5\). Mit der obigen Normierung lassen sich die Beiträge einzelner Episoden direkt interpretieren. Für eine Episode mit Dauer \(\Delta t\) gilt
+\[
+\begin{aligned}
+\text{Hypo-Beitrag} \; &=\; \frac{\Delta t}{T}\, w_{\mathrm{hypo}} \left( \frac{(70-G_x(t))_+}{H_{\text{hypo}}} \right)^{\!2},\\
+\text{Hyper-Beitrag} \; &=\; \frac{\Delta t}{T}\, w_{\mathrm{hyper}} \left( \frac{(G_x(t)-180)_+}{H_{\text{hyper}}} \right).
+\end{aligned}
+\]
+Beispiele (bei \(T=24\,\mathrm{h}\)):
+\begin{itemize}
+  \item \(1\,\mathrm{h}\) bei \(60\,\mathrm{mg/dL}\): \(\tfrac{1}{24}\cdot 1 \cdot w_{\mathrm{hypo}} \approx 0{,}0417\,w_{\mathrm{hypo}}\).
+  \item \(1\,\mathrm{h}\) bei \(200\,\mathrm{mg/dL}\): \(\tfrac{1}{24}\cdot \tfrac{20}{30}\cdot w_{\mathrm{hyper}} \approx 0{,}0278\,w_{\mathrm{hyper}}\).
+\end{itemize}
+Praktische Abstimmung: Hypos stärker gewichten \(\Rightarrow\) \(w_{\mathrm{hypo}}\) erhöhen (oder \(H_{\text{hypo}}\) senken); Hyper stärker gewichten \(\Rightarrow\) \(w_{\mathrm{hyper}}\) erhöhen (oder \(H_{\text{hyper}}\) senken). Für Vergleichbarkeit zwischen Experimenten empfiehlt es sich, \(H_{\text{hypo}}\) und \(H_{\text{hyper}}\) \emph{konstant} zu lassen und nur die Gewichte \(w_{\mathrm{hypo}}, w_{\mathrm{hyper}}\) zu justieren.
+\vspace{1em}
+\vspace{1em}
+% --- Notation (Kurzüberblick) -----------------------------------
+\newcommand{\Dtmin}{30\,\mathrm{min}}
+\FloatBarrier
+\begin{table}[p]
+\centering
+\caption{Notation (Kurzüberblick) für Symbole und Größen im Modell.}\label{tab:notation}
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.02}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.28\linewidth}X@{}}
+\hline
+\textbf{Symbol} & \textbf{Bedeutung} \\
+\hline
+$T$                         & Simulationshorizont; hier $T=24\,\mathrm{h}$ (00{:}00--24{:}00). \\
+$[0,T]$                     & Betrachtetes Zeitintervall eines Tages. \\
+$\Delta t$                  & Samplingintervall (z.\,B. $5\,\mathrm{min}$) für die diskrete Auswertung. \\
+$x=(\ICRf,\ICRm,\ICRa)$     & Entscheidungsvektor (ICR-Werte für Frühstück/Mittag/Abend). \\
+$G_x(t)$                    & Simulierte Glukosekurve unter Parametern $x$. \\
+$C(t)$                      & Angekündigte Kohlenhydrate [g] zum Zeitpunkt $t$ (für die Bolusberechnung). \\
+$\mathrm{TIR}_{70\text{--}180}(x)$ & Zeit im Zielbereich $[70,180]\,\mathrm{mg/dL}$. \\
+$w_{\mathrm{hypo}},\,w_{\mathrm{hyper}}$ & Gewichte der Strafterme (Hypo stärker als Hyper). \\
+$H_{\text{hypo}}$           & Normierung der Hypo-Tiefe; hier $H_{\text{hypo}}=\Hhypo$. \\
+$H_{\text{hyper}}$          & Normierung des Hyper-Überschusses; hier $H_{\text{hyper}}=\Hhyper$. \\
+$P_{\mathrm{hypo}}(x)$      & Quadratischer Strafterm für Unterzucker. \\
+$P_{\mathrm{hyper}}(x)$     & Linearer Strafterm für Überzucker. \\
+$\bar u_{\mathrm{basal}}$   & Konstante Basalrate mit $u_{\mathrm{basal}}(t)=\bar u_{\mathrm{basal}}$. \\
+$\tau_n$                    & Zeitpunkt der $n$-ten Bolusgabe (Ereigniszeit). \\
+$\Delta_{\min}$             & Mindestabstand zwischen Bolusgaben; hier $\Delta_{\min}=\Dtmin$. \\
+$\mathrm{tod}(t)$           & Tageszeitabbildung $t \mapsto t \bmod 24\,\mathrm{h}\in[0,24\,\mathrm{h})$. \\
+$r_{\text{screen}}$         & Harter Verhältnis-Screen (z. B. 2.0). \\
+\(N_{\max}\)                  & Max. Anzahl zu simulierender Nachbarn (z. B. 10). \\
+$\mathcal W_{\mathrm{Morgen}}$, $\mathcal W_{\mathrm{Mittag}}$, $\mathcal W_{\mathrm{Abend}}$, $\mathcal W_{\mathrm{Nacht}}$ & Tageszeitfenster f\"ur Fr\"uhst\"uck/Mittag/Abend/Nacht (vgl. Simulationsregeln). \\
+$\ICR(t)$                  & Aktiver ICR zum Zeitpunkt $t$ (st\"uckweise konstant \"uber die Fenster). \\
+$\DICR$                    & Maximal zul\"assige \"Anderung je ICR pro Optimierungsrunde (Schrittbegrenzung). \\
+$r(x),\,\tilde r(x)$      & Verh\"altnis $\max/\min$ der ICRs und logarithmische \"Uberschreitung f\"ur den Guardrail. \\
+$\rmax,\,\lambdadisp$    & Schwellwert des Verh\"altnisses bzw. Gewicht der Dispersionsstrafe. \\
+$P_{\mathrm{disp}}(x)$    & Dispersions\,–\,Penalty (weiche Homogenit\"atsstrafe). \\
+$\mathcal N(x)$           & Nachbarschaft um $x$ (deterministische Kandidatenbildung). \\
+$S_{\text{loc}},\,S_{\text{all}}$ & Schrittmengen f\"ur lokale bzw. gemeinsame Shifts. \\
+$F_q(x)$                  & Quartalsbewertung (Szenario\,–\,Mittel \"uber $M$ Tage). \\
+$\mathcal P_q$            & Verteilung der Tageszust\"ande im Quartal $q$. \\
+$M$                       & Anzahl simulierte Tage im Quartal. \\
+$f_{\text{day}}(x;\theta)$ & Tageszielwert f\"ur Zustand $\theta$. \\
+$\mathrm{TBR}_{<70}(x)$, $\mathrm{TBR}_{<54}(x)$, $\mathrm{TAR}_{>180}(x)$ & Zeiten unter/\"uber Bereich (Sicherheitskriterien). \\
+$B_{\mathrm{meal}}(t)$   & Mahlzeitenbolus $=C(t)/\ICR(t)$. \\
+\hline
+\end{tabularx}
+\end{table}
+\FloatBarrier

@@ -1,0 +1,46 @@
+\section{Auswertung und Ergebnisse}
+
+%\paragraph{Per\mbox{-}Fenster\-Attribution der Zielfunktion}
+\paragraph{Per-Fenster-Attribution der Zielfunktion}
+Seien \(\mathcal W_{\mathrm{Morgen}}, \mathcal W_{\mathrm{Mittag}}, \mathcal W_{\mathrm{Abend}}, \mathcal W_{\mathrm{Nacht}}\) die in den Simulationsregeln definierten Tagesfenster. Zur transparenten Zuordnung der Effekte der drei ICRs zerlegen wir die Zielfunktion fensterweise. Für \(j\in\{\mathrm{Morgen},\mathrm{Mittag},\mathrm{Abend},\mathrm{Nacht}\}\) definieren wir
+\[
+\mathrm{TIR}^{(j)}(x)\;:=\;\frac{1}{T}\int_{\mathcal W_j} \Ind\{70\le G_x(t)\le 180\}\,dt,
+\]
+\[
+P_{\mathrm{hypo}}^{(j)}(x)\;:=\;\frac{w_{\mathrm{hypo}}}{T}\int_{\mathcal W_j}\!\left(\frac{\max\{0,\,70-G_x(t)\}}{\Hhypo}\right)^{\!2}\, dt.
+\]
+\[
+P_{\mathrm{hyper}}^{(j)}(x)\;:=\;\frac{w_{\mathrm{hyper}}}{T}\int_{\mathcal W_j}\!\left(\frac{\max\{0,\,G_x(t)-180\}}{\Hhyper}\right)\, dt.
+\]
+\medskip
+
+\noindent Dann ergibt sich insgesamt die additive Zerlegung
+
+\newcommand{\Jfen}{\{\mathrm{Morgen},\mathrm{Mittag},\mathrm{Abend},\mathrm{Nacht}\}}
+\[
+f(x) \;=\; \sum_{\mathclap{j\in\Jfen}}\Bigl(\mathrm{TIR}^{(j)}(x) - P_{\mathrm{hypo}}^{(j)}(x) - P_{\mathrm{hyper}}^{(j)}(x)\Bigr).
+\]
+\medskip
+
+\noindent Interpretation: Die Beiträge aus \(\mathcal W_{\mathrm{Morgen}},\mathcal W_{\mathrm{Mittag}},\mathcal W_{\mathrm{Abend}}\) sind direkt den Parametern \(\ICRf,\ICRm,\ICRa\) zuordenbar; die Nacht trägt als Kontrollfenster ohne Mahlzeiten-ICR zur Gesamtbewertung bei.
+\medskip
+\paragraph{Quartalsweise Auswertung (90 Tage)}
+Wir belassen die Tagessimulation bei \(T=24\,\mathrm{h}\) und aggregieren \emph{über Tage} eines Quartals. Sei \(\theta\) ein Tageszustand (Mahlzeiten, Aktivität, Infekte, \ldots) mit Verteilung \(\mathcal P_q\) im Quartal \(q\). Die Tagesbewertung \(f_{\text{day}}(x;\theta)\) entspricht der Zielfunktion aus Abschnitt \emph{Zielsetzung, Setup und Zielfunktion} mit \(T=24\,\mathrm{h}\).
+
+\noindent Für einen repräsentativen Szenariosatz \(\theta_1,\dots,\theta_M\stackrel{\text{i.i.d.}}{\sim}\mathcal P_q\) verwenden wir das Szenario-Mittel (Sample Average Approximation):
+\[
+F_q(x)\;=\;\frac{1}{M}\sum_{i=1}^M f_{\text{day}}\bigl(x;\theta_i\bigr).
+\]
+\noindent Hinweis: Bei festem \(M\) ist \(\arg\max_x\sum_i f_{\text{day}}(x;\theta_i)\) äquivalent zu \(\arg\max_x F_q(x)\); wir verwenden den Mittelwert wegen besserer Interpretierbarkeit und stabiler Skala. Die Tagesbewertung \(f_{\text{day}}(x;\theta)\) entspricht der Zielfunktion aus Abschnitt \emph{Zielsetzung, Setup und Zielfunktion} mit \(T=24\,\mathrm{h}\).
+
+\paragraph{Sicherheitskriterien über mehrere Tage}
+Für die Time-Below-/Above-Range-Metriken mitteln wir analog über die \(M\) Tage. Mit \(\mathrm{TBR}^{(i)}_{<70}(x):=\int_0^T \Ind\{G^{(i)}_x(t)<70\}\,dt\) (und analog für \(<54\), \(>180\)) definieren wir
+\begin{align}
+\overline{\mathrm{TBR}}_{<70}(x)  &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TBR}^{(i)}_{<70}(x)  &&\le \tau_{<70},\\
+\overline{\mathrm{TBR}}_{<54}(x)  &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TBR}^{(i)}_{<54}(x)  &&\le \tau_{<54},\\
+\overline{\mathrm{TAR}}_{>180}(x) &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TAR}^{(i)}_{>180}(x) &&\le \tau_{>180}\ \ \text{(optional)}.
+\end{align}
+\noindent Strenger (optional) kann statt des Mittels eine Worst-Case-Grenze genutzt werden, z.\,B. \(\max_i \mathrm{TBR}^{(i)}_{<70}(x)\le\tau_{<70}^{\text{strict}}\).
+
+\paragraph{Quartalsweise Aktualisierung der Parameter}
+Die ICR-Werte \(x=(\ICRf,\ICRm,\ICRa)\) bleiben im Quartal \(q\) konstant und werden zum Quartalswechsel \(q-1\to q\) nur begrenzt angepasst; die Schrittbegrenzung \(\bigl|\ICR_j^{(q)}-\ICR_j^{(q-1)}\bigr|\le\DICR\) (siehe Abschnitt \emph{Nebenbedingungen auf der Entscheidungsvariable}) stellt eine sichere, nachvollziehbare Weiterentwicklung sicher.

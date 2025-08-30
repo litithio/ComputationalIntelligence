@@ -1,0 +1,13 @@
+\section{Sicherheitskriterien (ergebnisbasiert)}
+
+\paragraph{Zeit-im-Bereich-Grenzen.} Die folgenden Bedingungen werden auf der simulierten Trajektorie \(G_x(t)\) geprüft (d.\,h. sie beziehen sich auf das Ergebnis, nicht direkt auf die Entscheidungsvariable \(x\)):
+\[
+\mathrm{TBR}_{<70}(x) := \int_0^T \Ind\{G_x(t)<70\}\,dt \;\le\; \tau_{<70},
+\]
+\[
+\mathrm{TBR}_{<54}(x) := \int_0^T \Ind\{G_x(t)<54\}\,dt \;\le\; \tau_{<54},
+\]
+\[
+\mathrm{TAR}_{>180}(x) := \int_0^T \Ind\{G_x(t)>180\}\,dt \;\le\; \tau_{>180}\quad \text{(optional)}.
+\]
+\noindent Typischerweise werden \(\tau_{<70}\) und \(\tau_{<54}\) eng gewählt (Hypoglykämieschutz), \(\tau_{>180}\) kann optional als weicher Grenzwert genutzt werden.

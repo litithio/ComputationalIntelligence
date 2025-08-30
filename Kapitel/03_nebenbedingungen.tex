@@ -1,0 +1,36 @@
+\section{Nebenbedingungen auf der Entscheidungsvariable}
+
+% --- Schrittbegrenzung zwischen Optimierungsrunden --------------
+
+\paragraph{Schrittbegrenzung zwischen Optimierungsrunden.} Sei \(\DICR\) die maximal zulässige Änderung eines \(\ICR\)-Wertes pro Optimierungsrunde (z.\,B. \(\DICR=0{,}5\,\mathrm{g}/\mathrm{E}\)). Diese Nebenbedingung begrenzt die Schrittweite zwischen zwei Runden \(q-1 \to q\) und unterstützt eine sichere, nachvollziehbare Anpassung der Parameter.
+% Quartals-Index q = 1,2,... ; j \in \{f,m,a\} (Früh, Mittag, Abend).
+\[
+\bigl|\,\ICR_j^{(q)} - \ICR_j^{(q-1)}\,\bigr| \;\le\; \DICR,
+\qquad j \in \{f,m,a\},\;\; q=1,2,\dots
+\]
+
+% --- (Optional) Homogenität der ICRs: Verhältnis-basiertes Guardrail (soft) ---
+\medskip
+
+\paragraph{Homogenität der ICRs}
+Um extreme Spreizungen zwischen den drei ICR-Werten zu vermeiden, bestrafen wir
+Überschreitungen eines zulässigen Verhältnisses zwischen größtem und kleinstem ICR.
+Definiere
+\[
+r(x)\;=\;\frac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}},
+\qquad
+\tilde r(x)\;=\;\max\{\,0,\,\ln r(x)-\ln \rmax\,\}.
+\]
+Der weiche Dispersions-Penalty lautet
+\[
+P_{\mathrm{disp}}(x)\;=\;\lambdadisp\,\tilde r(x)^{2},
+\]
+und geht additiv (mit negativem Vorzeichen) in die Zielfunktion ein:
+\[
+f_{\text{neu}}(x)\;=\;f(x)\;-\;P_{\mathrm{disp}}(x).
+\]
+\noindent
+\textit{Interpretation:} Solange das Verhältnis \(r(x)\le\rmax\) ist, fällt keine Zusatzstrafe an.
+Wird \(\rmax\) überschritten, wächst die Strafe quadratisch in der \emph{logarithmischen} Überschreitung.
+Die Log-Skala macht den Guardrail maßstabsfrei: Eine gemeinsame Verschiebung aller ICRs
+ändert \(P_{\mathrm{disp}}\) nicht. \textit{Startwerte:} \(\rmax=1.8\), \(\lambdadisp=0.05\).
