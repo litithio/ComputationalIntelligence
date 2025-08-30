@@ -4,7 +4,7 @@
 In der intensivierten Insulintherapie (ICT) ist es zentral, die Zeit im Zielbereich (TIR) zu maximieren und Hypoglykämien konsequent zu vermeiden. Dabei sollen Modellannahmen und Sicherheitsgrenzen so gewählt werden, dass sie klinisch plausibel und transparent sind.
 
 \paragraph{Ziel und Setup.}
-Wir optimieren die drei mahlzeitenspezifischen \IKRtxtpl{} \(x=(\ICRf,\ICRm,\ICRa)\). Jede Kandidateneinstellung wird mit einem digitalen Zwilling über einen 24‑h‑Horizont \([0,T]\) mit \(T=24\,\mathrm{h}\) simuliert und bewertet. Sicherheitsrelevante Nebenbedingungen (konstante Basalrate, tageszeitliche Fenster, Mindestabstand zwischen Bolusgaben, prädiktive Low‑Sperre für Korrekturen, Schrittbegrenzung zwischen Runden) sichern die klinische Plausibilität ab. Wichtige Symbole sind in Tabelle~\ref{tab:notation} zusammengefasst.
+Wir optimieren die drei mahlzeitenspezifischen \IKRtxtpl{} \(x=(\ICRf,\ICRm,\ICRa)\). Jede Kandidateneinstellung wird mit einem digitalen Zwilling über einen 24‑h‑Horizont \([0,T]\) mit \(T=24\,\mathrm{h}\) simuliert und bewertet. Sicherheitsrelevante Nebenbedingungen (konstante Basalrate, tageszeitliche Fenster, Mindestabstand zwischen Bolusgaben, Schrittbegrenzung zwischen Runden) sichern die klinische Plausibilität ab. Wichtige Symbole sind in Tabelle~\ref{tab:notation} zusammengefasst.
 
 
 \paragraph{Digital Decision Maker (Begründung)}
@@ -68,15 +68,18 @@ $\tau_n$                    & Zeitpunkt der $n$-ten Bolusgabe (Ereigniszeit). \\
 $\Delta_{\min}$             & Mindestabstand zwischen Bolusgaben; hier $\Delta_{\min}=\Dtmin$. \\
 $\mathrm{tod}(t)$           & Tageszeitabbildung $t \mapsto t \bmod 24\,\mathrm{h}\in[0,24\,\mathrm{h})$. \\
 $r_{\text{screen}}$         & Harter Verhältnis-Screen (z. B. 2.0). \\
-\(N_{\max}\)                  & Max. Anzahl zu simulierender Nachbarn (z. B. 10). \\
 $\mathcal W_{\mathrm{Morgen}}$, $\mathcal W_{\mathrm{Mittag}}$, $\mathcal W_{\mathrm{Abend}}$, $\mathcal W_{\mathrm{Nacht}}$ & Tageszeitfenster f\"ur Fr\"uhst\"uck/Mittag/Abend/Nacht (vgl. Simulationsregeln). \\
 $\ICR(t)$                  & Aktiver ICR zum Zeitpunkt $t$ (st\"uckweise konstant \"uber die Fenster). \\
 $\DICR$                    & Maximal zul\"assige \"Anderung je ICR pro Optimierungsrunde (Schrittbegrenzung). \\
 $r(x),\,\tilde r(x)$      & Verh\"altnis $\max/\min$ der ICRs und logarithmische \"Uberschreitung f\"ur den Guardrail. \\
 $\rmax,\,\lambdadisp$    & Schwellwert des Verh\"altnisses bzw. Gewicht der Dispersionsstrafe. \\
+% --- Neue Zeilen: Gauß-Batch-Notation ---
+$\mathcal B(x)$           & Gau{\ss}\-Batch an Vorschl\"agen um $x$ (stochastische Kandidatenbildung). \\
+$B$                        & Batchgr\"o\ss e der Gau{\ss}\-Proposals pro Iteration (z.\,B. 8). \\
+$p(\text{G1}),\,p(\text{G2})$ & Auswahlwahrscheinlichkeiten f\"ur Einzel\-Gen vs. gemeinsamen Shift (z.\,B. 0.8\,/\,0.2). \\
+$\rho_{\mathrm{mut}}$           & Mutationsrate pro Iteration (Wahrscheinlichkeit, dass mutiert wird; Standard: $0{,}3$). \\
+$\tau_{<70},\,\tau_{<54},\,\tau_{>180}$ & Sicherheitsgrenzen f\"ur TBR(<70), TBR(<54), TAR(>180) (z.\,B. in h/Tag oder \%). \\
 $P_{\mathrm{disp}}(x)$    & Dispersions\,–\,Penalty (weiche Homogenit\"atsstrafe). \\
-$\mathcal N(x)$           & Nachbarschaft um $x$ (deterministische Kandidatenbildung). \\
-$S_{\text{loc}},\,S_{\text{all}}$ & Schrittmengen f\"ur lokale bzw. gemeinsame Shifts. \\
 $F_q(x)$                  & Quartalsbewertung (Szenario\,–\,Mittel \"uber $M$ Tage). \\
 $\mathcal P_q$            & Verteilung der Tageszust\"ande im Quartal $q$. \\
 $M$                       & Anzahl simulierte Tage im Quartal. \\
