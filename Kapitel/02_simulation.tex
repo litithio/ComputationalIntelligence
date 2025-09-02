@@ -1,0 +1,53 @@
+\newcommand{\ubasal}{\bar u_{\mathrm{basal}}}
+\newcommand{\tod}{\mathrm{tod}}
+\newcommand{\Dtmin}{30\,\mathrm{min}}
+
+\section{Simulation durch einen digitalen Zwilling} \label{simulation}
+
+Digitale Zwillinge ermöglichen die virtuelle Nachbildung physiologischer Prozesse und individueller Therapieentscheidungen auf Basis realer Patientendaten. Sie erlauben eine risikofreie Bewertung alternativer Behandlungsstrategien und sind in der Diabetesforschung bereits erfolgreich eingesetzt worden, etwa zur retrospektiven Analyse von Insulin- und Kohlenhydratszenarien \cite{Cappon2023ReplayBG} oder zur personalisierten Therapieplanung mittels Health Knowledge Graphs \cite{jpm14040359}. In dieser Modellierung wird ein digitaler Zwilling als gegeben vorausgesetzt. Ziel ist es, die Wirkung unterschiedlicher Insulin-Kohlenhydrat-Verhältnisse (ICR) auf den Blutzuckerverlauf zu simulieren, ohne reale Risiken für den Patienten einzugehen.
+
+\subsection{Einsatz des digitalen Zwillings}
+
+Für diese Modellierung erfolgt die Simulation von Glukosewerten jeweils über einen Zeitraum von 24 Stunden. Das betrachtete Zeitintervall ist \([0,T]\) mit \(T=24\,\mathrm{h}\), entsprechend einem Kalendertag von 00:00 bis 24:00 Uhr. Jeder Zeitpunkt \(t\) wird über die Abbildung \(t \mapsto t \bmod 24\,\mathrm{h}\) einem Tageszeitwert zugeordnet.
+
+Die Berechnung des Mahlzeiteninsulins erfolgt auf Basis der angekündigten Kohlenhydratmenge \(C(t)\) [g] und des zugehörigen ICR-Werts:
+\[
+B_{\mathrm{meal}}(t)\;=\;\frac{C(t)}{\ICR(t)}.
+\]
+Korrekturboli, sofern im Zwilling aktiviert, sind nicht Teil der Entscheidungsvariable und folgen festen Regeln. Sie beeinflussen die Optimierung nicht direkt, sondern werden über Sicherheitsmetriken wie TBR (Time Below Range) und TAR (Time Above Range) bewertet (siehe Kapitel \ref{modellierung}).
+
+\subsection{Annahmen der Simulation}
+
+Zur Vermeidung von Bolus-Stacking wird ein Mindestabstand \(\Dtmin\) zwischen zwei Bolusgaben definiert (hier: \(30\,\mathrm{min}\)). Die Bolusereignisse sind durch ihre Zeitpunkte \(\tau_1 < \tau_2 < \dots < \tau_N\) auf dem Intervall \([0,T]\) beschrieben. Die folgende Bedingung stellt sicher, dass zwischen zwei Gaben ausreichend Zeit liegt:
+\[
+\tau_{n+1} - \tau_n \;\ge\; \Dtmin \qquad \forall\, n=1,\dots,N-1.
+\]
+
+Zur tageszeitlichen Zuordnung der ICR-Werte wird das Intervall \([0,T]\) in vier Fenster unterteilt:
+\[
+\begin{aligned}
+\mathcal{W}_{\mathrm{Morgen}} &:= \{\, t\in[0,T] \mid 5\,\mathrm{h} \le \tod(t) < 10\,\mathrm{h} \,\},\\
+\mathcal{W}_{\mathrm{Mittag}} &:= \{\, t\in[0,T] \mid 10\,\mathrm{h} \le \tod(t) < 16\,\mathrm{h} \,\},\\
+\mathcal{W}_{\mathrm{Abend}}  &:= \{\, t\in[0,T] \mid 16\,\mathrm{h} \le \tod(t) < 22\,\mathrm{h} \,\},\\
+\mathcal{W}_{\mathrm{Nacht}}  &:= \{\, t\in[0,T] \mid 22\,\mathrm{h} \le \tod(t) < 24\,\mathrm{h} \ \text{oder}\ 0\,\mathrm{h} \le \tod(t) < 5\,\mathrm{h} \,\}.
+\end{aligned}
+\]
+Die Insulin-Kohlenhydrat-Verhältnisse sind stückweise konstant über diese Fenster definiert:
+\[
+\ICR(t)=
+\begin{cases}
+\ICRf, & t \in \mathcal{W}_{\mathrm{Morgen}},\\
+\ICRm, & t \in \mathcal{W}_{\mathrm{Mittag}},\\
+\ICRa, & t \in \mathcal{W}_{\mathrm{Abend}},\\
+\text{(keine Mahlzeiten-ICR)}, & t \in \mathcal{W}_{\mathrm{Nacht}}.
+\end{cases}
+\]
+In der Nacht \(\mathcal{W}_{\mathrm{Nacht}}\) werden keine Mahlzeitenboli verabreicht.
+
+Die Basalrate ist konstant und liefert den Hintergrundbedarf gemäß:
+\[
+u_{\mathrm{basal}}(t)=\ubasal \quad \text{für alle } t \in [0,T].
+\]
+Sie stabilisiert den nüchternen Glukoseverlauf und bleibt über das Quartal hinweg unverändert, sodass der Optimierer ausschließlich die Effekte der Mahlzeitenfaktoren \(\ICR_f, \ICR_m, \ICR_a\) lernt. Tageszeitlich variierende Basalprofile oder automatische Anpassungen (AID) sind bewusst deaktiviert, können aber in zukünftigen Erweiterungen berücksichtigt werden.
+
+Der digitale Zwilling wird kontinuierlich nachtrainiert, um auch bei physiologischen Veränderungen ein möglichst realistisches Abbild des individuellen Patientenprofils zu gewährleisten.

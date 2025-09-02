@@ -1,0 +1,25 @@
+\section{Problembeschreibung und Zielsetzung}
+
+Die vorliegende Arbeit widmet sich der Optimierung der Insulin-Kohlenhydrat-Verhältnisse (ICR) im Rahmen der intensivierten Insulintherapie (ICT) für Menschen mit Typ-1-Diabetes. Ziel ist es, die Therapieparameter datenbasiert und reproduzierbar zu verbessern, um die Zeit im Zielbereich (TIR) zu maximieren und Hypoglykämien konsequent zu vermeiden. Die Optimierung erfolgt mithilfe eines digitalen Entscheidungsmodells, das auf simulationsgestützten Bewertungen basiert und die bisherigen heuristischen Anpassungen ablösen soll.
+
+\subsection{Die Intensivierte Insulintherapie (ICT)}
+
+Typ-1-Diabetes ist eine chronische Autoimmunerkrankung, bei der das körpereigene Immunsystem die insulinproduzierenden Beta-Zellen in der Bauchspeicheldrüse zerstört. Dies führt zu einem absoluten Insulinmangel, der eine lebenslange Insulinzufuhr erforderlich macht \cite{ddg2023}. Die Therapie zielt auf eine möglichst stabile Stoffwechsellage, die Akutkomplikationen wie Hypo- und Hyperglykämien vermeidet und langfristige Folgeerkrankungen reduziert.
+
+Die intensivierte Insulintherapie (ICT) gilt als Behandlungsstandard. Sie basiert auf dem Basal-Bolus-Prinzip: Ein langwirksames Basalinsulin deckt den Grundbedarf, während kurzwirksames Bolusinsulin zu den Mahlzeiten und zur Korrektur verabreicht wird. Die Dosierung erfolgt individuell und berücksichtigt Faktoren wie Tageszeit, Mahlzeitenzusammensetzung, körperliche Aktivität, Stress, Infektionen und hormonelle Schwankungen \cite{ddg2023}.
+
+Zentrale Parameter der ICT sind das Insulin-Kohlenhydrat-Verhältnis (ICR) und der Insulin-Sensitivitätsfaktor (ISF). Der ICR gibt an, wie viele Gramm Kohlenhydrate durch eine Einheit Insulin abgedeckt werden, während der ISF beschreibt, um wie viel mg/dL eine Einheit Insulin den Blutzucker senkt \cite{davidson2008analysis}.
+
+Die ICR-Werte sind typischerweise tageszeitabhängig und werden getrennt für Frühstück, Mittagessen und Abendessen festgelegt. Dies berücksichtigt die circadiane Insulinempfindlichkeit, die morgens am geringsten und mittags am höchsten ist \cite{ddg2023}. Eine differenzierte Betrachtung dieser drei Zeitfenster ist essenziell für eine präzise und sichere Insulindosierung.
+
+Anhand der ICR- und ISF-Werte wird der Mahlzeiteninsulinbedarf bei jeder Nahrungsaufnahme individuell berechnet – abhängig von der aufgenommenen Kohlenhydratmenge und der Tageszeit.
+
+\subsection{Optimierung des Insulin-Kohlenhydrat-Verhältnisses}
+
+Ziel dieser Arbeit ist es, die Anpassung der Insulin-Kohlenhydrat-Verhältnisse (ICR) durch ein datenbasiertes Optimierungsverfahren zu verbessern. Anstelle der bislang üblichen heuristischen Anpassung auf Basis von Erfahrungswerten und subjektivem Bauchgefühl kommt ein digitaler Entscheider zum Einsatz, der die Therapieparameter systematisch und reproduzierbar optimiert.
+
+Kern des Verfahrens ist ein evolutionärer Algorithmus, der die Wirkung unterschiedlicher ICR-Einstellungen mithilfe eines digitalen Zwillings simuliert. Dieser Zwilling bildet den Blutzuckerverlauf über einen 24-Stunden-Zeitraum realitätsnah ab, wobei klinisch relevante Regeln und Sicherheitsgrenzen berücksichtigt werden. Dadurch kann die Therapie risikofrei und patientenspezifisch nachgebildet werden.
+
+Die Optimierung orientiert sich eng an der tatsächlichen Praxis der ICT: Es werden drei etablierte ICR-Werte für Frühstück, Mittagessen und Abendessen verwendet, die jeweils konstant über ein Quartal gelten. Die Simulation ermöglicht eine beschleunigte Bewertung möglicher Einstellungen, sodass die Anpassung nicht nur sicherer, sondern auch effizienter erfolgt.
+
+Durch diesen datengetriebenen Ansatz soll die Zeit im Zielbereich (TIR) signifikant verbessert werden. Die Methode bietet eine transparente Entscheidungsgrundlage, reduziert Unsicherheiten in der Therapieanpassung und schafft eine fundierte Alternative zur bisherigen Erfahrungsmedizin.

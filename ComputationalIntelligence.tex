@@ -9,6 +9,9 @@
 \usepackage[ngerman]{babel}
 \usepackage{tabularx}
 \usepackage[final]{microtype}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
 \usepackage[shortcuts]{extdash} % erlaubt Umbrüche an Bindestrichen via \-/
 \titleformat{\paragraph}[block]{\normalfont\normalsize\bfseries}{}{0pt}{}
 \titlespacing*{\paragraph}{0pt}{1ex plus .2ex}{0.6ex}
@@ -18,8 +21,7 @@
 \providecommand{\Autor}{Stefanie Neumann \\und \\ Johannes Ullrich}
 \providecommand{\BetreuerDHBW}{Prof. Dr. Heinrich Braun}
 \providecommand{\Was}{Seminararbeit}
-\providecommand{\Titel}{Computational Intelligence}
-\providecommand{\AbgabeDatum}{00.00.2025}
+\providecommand{\Titel}{Optimierung der Insulin-Kohlenhydrat-Verhältnisse für die Intensivierte Insulintherapie}
 \providecommand{\Abschluss}{Master of Science}
 \providecommand{\Studiengang}{Informatik}
 \hypersetup{
@@ -62,7 +64,6 @@
         {\large Dualen Hochschule Baden-Württemberg Center for Advanced Studies}\\[0.5cm]
         {\large von}\\[0.5cm]
         {\large\bfseries \Autor}\\[1cm]
-        {\large Abgabedatum \AbgabeDatum}\\
         \vfill
     \end{center}
     \begin{tabular}{l@{\hspace{2cm}}l}
@@ -72,15 +73,13 @@
 \hypersetup{pageanchor=true}
 \setcounter{page}{1}
 
-\include{Kapitel/01_zielsetzung_und_setup}
-\include{Kapitel/02_gen_string_und_encoding}
-\include{Kapitel/03_nebenbedingungen}
-\include{Kapitel/04_sicherheitskriterien}
-\include{Kapitel/05_simulationsregeln}
-\include{Kapitel/06_auswertung}
+\include{Kapitel/01_problembeschreibung}
+\include{Kapitel/02_simulation}
+\include{Kapitel/03_formale_modellierung}
+\include{Kapitel/04_lösungsansatz}
 
 \pagenumbering{roman}
-\setcounter{page}{6}
+\setcounter{page}{1}
 
 \addcontentsline{toc}{chapter}{Literaturverzeichnis}
 \def\refname{Literaturverzeichnis}

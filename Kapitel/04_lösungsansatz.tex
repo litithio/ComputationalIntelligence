@@ -1,0 +1,86 @@
+\newcommand{\sigmaall}{\sigma_{\text{all}}}
+\newcommand{\sigmaloc}{\sigma_{\text{loc}}}
+
+\section{Lösungsansatz}
+Zur Optimierung der Insulin-Kohlenhydrat-Verhältnisse wird ein auf stochastischer Mutation basierter Lösungsansatz gewählt. Neue Kandidaten werden durch Gauß-Mutationen von Einzel- oder Gesamtgenen unter Einhaltung von Wert- und Schrittbegrenzungen erzeugt. Ein Screening schließt unzulässige Kandidaten vor der Simulation aus. Die Bewertung erfolgt quartalsweise auf Basis der zuvor in Kapitel \ref{modellierung} definierten Zielfunktion. Algorithmus \ref{algorithmus} veranschaulicht den Ablauf der Optimierung.
+
+\subsection{Mutationsoperatoren} \label{Mutationsoperatoren}
+Zur Anpassung der Insulin-Kohlenhydrat-Verhältnisse (ICR) verwenden wir zwei Gauß-basierte Mutationsoperatoren, die klinisch plausible Änderungen ermöglichen und Sicherheitsgrenzen respektieren:
+\begin{itemize}
+  \item[\textbf{G1}] \textbf{Einzel-Gen (Gauß):} Wähle \(j\in\{f,m,a\}\) gleichverteilt. Ziehe \(\delta \sim \mathcal N(0,\sigmaloc^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(\ICR'_j=\ICR_j+\delta\) und lasse die anderen Gene unverändert; projiziere dann \(x'\) komponentenweise auf \([5,30]\).
+  \item[\textbf{G2}] \textbf{Gemeinsamer Shift (Gauß):} Ziehe \(\delta \sim \mathcal N(0,\sigmaall^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(x' = x + \delta\,\mathbf{1}\) und projiziere auf \([5,30]^3\).
+\end{itemize}
+\emph{Notation:} \(\Pi_{[a,b]}\) bezeichnet die Projektion auf das Intervall \([a,b]\); \(\Pi_{[5,30]^3}\) ist die komponentenweise Projektion auf das kartesische Produkt.\\
+Beide Operatoren respektieren die Box-Grenzen $[5, 30]$ g/U sowie die Schrittbegrenzung $\Delta \text{ICR}$ pro Optimierungsrunde. \\
+
+\noindent Der gemeinsame Shift (G2) reflektiert reale, systemweite Veränderungen des Insulinbedarfs. Akute Infekte, Fieber, Stress oder bestimmte Medikamente erhöhen beispielsweise den Insulinbedarf. Ein solcher globaler Anstieg des Insulinbedarfs bildet sich in sinkenden ICR-Werten ab. Umgekehrt führen mehr Bewegung, Gewichtsverlust oder eine gesteigerte Insulinsensitivität dazu, dass der Bedarf sinkt und die ICR-Werte steigen. Die Homogenitätsstrafe $P_{\text{disp}}(x)$ verhindert übermäßige Spreizung der ICR-Werte durch eine logarithmisch skalierte Penalty, die bei Überschreitung eines maximalen Verhältnisses $r_{\text{max}}$ greift. Einzel-Gen-Mutationen (G1) können dieses Verhältnis stärker beeinflussen und aktivieren gegebenenfalls die Strafe.
+
+\subsection{Stochastische Kandidatenbildung: GaussianBatchProposals}
+Pro Iteration erzeugen wir einen stochastischen \emph{Batch} von $B$ Kandidaten um den aktuellen Elternvektor $x$, basierend auf den Gau{\ss}-Mutationen aus Abschnitt \ref{Mutationsoperatoren}. Die Kandidatenbildung läuft wie folgt ab:
+\begin{itemize}
+  \item Ziehe f\"ur jedes der $B$ Elemente unabh\"angig einen Operator: G1 (Einzel-Gen) mit Wahrscheinlichkeit $p(\mathrm{G1})$ oder G2 (gemeinsamer Shift) mit $p(\mathrm{G2})$ (Mögliche Wahrscheinlichkeitsverteilungen für $p(\mathrm{G1})$/$p(\mathrm{G2})$ sind: $0{,}8/0{,}2$).
+  \item Führe die Mutation nach der gewählten Strategie durch.
+\end{itemize}
+
+\subsection{Screening und Auswahlmechanismus}
+Vor der Simulation der erzeugten Kandidaten erfolgt ein \textbf{Schnell-Screening}, bei dem Kandidaten mit zu großer ICR-Spreizung ($r(x') > r_{\text{screen}}$) bereits vor der aufwendigen Simulation verworfen werden. Dadurch wird verhindert, dass rechnerisch zulässige, aber klinisch unplausible Vorschläge weiterverarbeitet werden. Die verbleibenden Vorschläge werden simuliert und bewertet. Die Auswahlregel pro Iteration lautet:
+\begin{enumerate}
+  \item Erzeuge Gauß-Batch $B(x)$.
+  \item Führe das Screening durch und simuliere alle zulässigen Kandidaten.
+  \item Übernehme den besten Kandidaten als neuen Elternvektor.
+  \item Falls keine Verbesserung erfolgt, wird mit kleiner Wahrscheinlichkeit ein zusätzlicher G1-Kick mit erhöhter Varianz durchgeführt.
+\end{enumerate}
+Der zusätzliche G1-Kick soll das Optimierungsverfahren bei ausbleibender Verbesserung durch Exploration aus einem lokalen Plateau oder lokalen Optimum herauslösen. Ergänzt wird das Vorab-Screening durch die bereits beschriebene Homogenitätsstrafe. Diese wirkt im Gegenteil zum harten Screening-Filter als weicher Mechanismus in der Zielfunktion. Gemeinsam sichern beide Strategien klinische Qualität und halten den Suchraum kontrolliert offen.
+
+\subsection{Algorithmusübersicht}
+Die gesamte Optimierung erfolgt gemäß Algorithmus~\ref{algorithmus}, der die Mutationsstrategie, das Screening und die Auswahlmechanismen integriert.
+
+\medskip
+
+\begin{algorithm}
+\caption{Mutationsbasierte Optimierung der ICR-Werte mit Quartalsbewertung}
+\label{algorithmus}
+\begin{algorithmic}[1]
+\Function{MutateG1}{$x$}
+  \State Wähle $j \in \{f, m, a\}$ zufällig
+  \State Ziehe $\delta \sim \mathcal{N}(0, \sigma_{\text{loc}}^2)$, trunkiert auf $[-\Delta ICR, \Delta ICR]$
+  \State $x'_j \gets \text{clip}(x_j + \delta, 5, 30)$
+  \State $x'_k \gets x_k$ für $k \neq j$
+  \State \Return $x'$
+\EndFunction
+\State
+\Function{MutateG2}{$x$}
+  \State Ziehe $\delta \sim \mathcal{N}(0, \sigma_{\text{all}}^2)$, trunkiert auf $[-\Delta ICR, \Delta ICR]$
+  \State $x' \gets \text{clip}(x + \delta \cdot (1, 1, 1), 5, 30)$
+  \State \Return $x'$
+\EndFunction
+\State
+\Function{r}{$x$}
+  \State \Return $\max(x) / \min(x)$
+\EndFunction
+\State
+\Function{OptimizeICR}{$x$}
+  \State $BATCH \gets \emptyset$
+  \For{$i = 1$ to $B$}
+    \State Ziehe Operator $\in \{G1, G2\}$ mit $p_{G1}, p_{G2}$
+    \If{Operator == G1}
+      \State $x' \gets$ \Call{MutateG1}{$x$}
+    \Else
+      \State $x' \gets$ \Call{MutateG2}{$x$}
+    \EndIf
+    \If{\Call{r}{$x'$} $\leq r_{\text{screen}}$}
+      \State Füge $x'$ zu $BATCH$ hinzu
+    \EndIf
+  \EndFor
+  \State Simuliere alle $x' \in BATCH$ über $M$ Tage und berechne Quartalsbewertung $F_q(x')$
+  \State Wähle $x_{\text{best}}$ mit maximalem $F_q(x')$
+  \If{$F_q(x_{\text{best}}) > F_q(x)$}
+    \State $x \gets x_{\text{best}}$
+  \Else
+    \State Mit Wahrscheinlichkeit $0.2$: $x \gets$ \Call{MutateG1}{$x$} mit erhöhter $\sigma_{\text{loc}}$
+  \EndIf
+  \State \Return $x$
+\EndFunction
+
+\end{algorithmic}
+\end{algorithm}

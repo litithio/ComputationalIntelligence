@@ -1,0 +1,201 @@
+\section{Formale Modellierung} \label{modellierung}
+
+Die formale Modellierung definiert, welche Parameter angepasst werden (Entscheidungsvariable) und wie deren Qualität bewertet wird (Zielfunktion). Die Bewertung erfolgt simulationsgestützt über einen digitalen Zwilling, wobei die Blutzuckerverläufe unter verschiedenen ICR-Einstellungen analysiert werden. Die folgende Abbildung \ref{fig:überblick} veranschaulicht den Zusammenhang zwischen Entscheidungsvariable, Simulation und Bewertung. Tabelle \ref{tabelle_notation} führt alle in der Modellierung verwendeten Symbole und Größen auf.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Bilder/Übersicht_Bewertung.png}
+    \caption{Überblick Bewertung einer ICR-Einstellung}
+    \label{fig:überblick}
+\end{figure}
+
+\subsection{Zielfunktion}
+
+Die Zielfunktion bewertet die Qualität einer ICR-Einstellung \(x = (\ICRf, \ICRm, \ICRa)\) über einen simulierten Tagesverlauf. Sie setzt sich aus drei Komponenten zusammen: der Zeit im Zielbereich (TIR), einer quadratischen Strafe für Hypoglykämien und einer linearen Strafe für Hyperglykämien:
+
+\begin{align}
+f(x)
+&= \phantom{-\,w_{\mathrm{hypo}}\,}\underbrace{\frac{1}{T}\int_{0}^{T}\Ind\{70 \le G_{x}(t) \le 180\}\,dt}_{\mathrm{TIR}_{70\text{--}180}(x)} \nonumber\\
+&\ - \underbrace{w_{\mathrm{hypo}}\,\frac{1}{T}\int_{0}^{T}\left(\frac{\max\{0,\,70 - G_{x}(t)\}}{\Hhypo}\right)^{2}\,dt}_{P_{\mathrm{hypo}}(x)} \nonumber\\
+&\ - \underbrace{w_{\mathrm{hyper}}\,\frac{1}{T}\int_{0}^{T}\left(\frac{\max\{0,\,G_{x}(t) - 180\}}{\Hhyper}\right)\,dt}_{P_{\mathrm{hyper}}(x)}.
+\end{align}
+
+\noindent Die Zielfunktion kombiniert drei Prinzipien:
+
+\begin{itemize}
+    \item \textbf{Normierung}: Die Konstanten \(H_{\text{hypo}} = \Hhypo\) und \(H_{\text{hyper}} = \Hhyper\) skalieren die Amplituden der Abweichungen. Da Hyperglykämien typischerweise größere numerische Ausschläge verursachen als Hypoglykämien, sorgt die Normierung für eine technische Skalierung und macht die Gewichte \(w_{\mathrm{hypo}}, w_{\mathrm{hyper}}\) dimensionslos und vergleichbar.
+    \item \textbf{Potenz}: Hypoglykämien werden quadratisch bestraft, um eine höhere Sensitivität gegenüber gefährlichen Ausreißern zu erreichen. Hyperglykämien hingegen werden linear bewertet.
+    \item \textbf{Gewichtung}: Die Gewichte \(w_{\mathrm{hypo}}\) und \(w_{\mathrm{hyper}}\) spiegeln die medizinische Priorisierung wider – Hypos sind klinisch kritischer und werden daher stärker gewichtet.
+\end{itemize}
+
+\subsection{Entscheidungsvariable}
+
+Die Optimierung erfolgt über drei Parameter, die jeweils das Insulin-Kohlenhydrat-Verhältnis (ICR) für eine bestimmte Tageszeit repräsentieren: Frühstück, Mittagessen und Abendessen. Diese Parameter bilden den sogenannten Gen-String:
+
+\[
+x = (\ICRf,\ \ICRm,\ \ICRa)^\top \in \mathbb{R}^3.
+\]
+
+\noindent Jeder Wert gibt an, wie viele Gramm Kohlenhydrate durch eine Einheit Insulin abgedeckt werden sollen. Um die Optimierung auf klinisch sinnvolle und sichere Bereiche zu beschränken, werden sogenannte Box-Grenzen definiert:
+
+\[
+5 \le \mathrm{ICR}_j \le 30 \quad \text{für } j \in \{f,m,a\}.
+\]
+
+\noindent Diese Grenzen erfüllen mehrere Funktionen: Sie gewährleisten die \textbf{klinische Plausibilität}, da typische ICR-Werte bei Erwachsenen meist zwischen 10 und 20 g/U liegen – Faktoren außerhalb eines Bereichs von 5–30 g/U sind selten und deuten auf eine Sondersituation (ausgeprägte Insulinresistenz oder Infekte) hin. Gleichzeitig dienen sie der \textbf{Sicherheit}, indem sie extrem hohe oder niedrige Werte vermeiden, die zu gefährlichen Bolusdosen führen könnten. Schließlich tragen sie zur \textbf{numerischen Stabilität} bei, indem sie den Suchraum begrenzen und die Kalibrierung der Zielfunktion erleichtern.
+\noindent Die Grenzen können \emph{patientenspezifisch angepasst} werden (z.\,B. 6-24 g/U), falls klinische Daten abweichende Bereiche nahelegen.
+
+\paragraph{Hinweis zur Interpretation des Gen-Strings}
+\noindent Der Gen-String wird zeitbasiert interpretiert. Jeder der drei Werte steuert ein spezifisches Tageszeitfenster, wie in Kapitel \ref{simulation} definiert. Die Fenster \(\mathcal W_{\mathrm{Morgen}}, \mathcal W_{\mathrm{Mittag}}, \mathcal W_{\mathrm{Abend}}\) legen fest, welcher ICR-Wert zu welchem Zeitpunkt aktiv ist. Dadurch ist klar nachvollziehbar, welcher Genwert welchen Abschnitt des Tages beeinflusst.
+
+\subsection{Nebenbedingungen und Sicherheitskriterien}
+
+Damit die Optimierung nicht zu extremen oder klinisch unplausiblen Einstellungen führt, werden zusätzliche Nebenbedingungen eingeführt. Diese betreffen sowohl die Homogenität und Schrittweite der ICR-Werte als auch die Sicherheit der resultierenden Blutzuckerverläufe. \\
+
+\paragraph{Schrittbegrenzung zwischen Optimierungsrunden}
+
+Um eine sichere und nachvollziehbare Anpassung der Parameter zu gewährleisten, wird die Schrittweite zwischen zwei Runden \(q-1 \to q\) begrenzt.
+
+\noindent Sei \(\DICR\) die maximal zulässige Änderung eines \(\ICR\)-Wertes pro Optimierungsrunde (z.\,B. \(\DICR=0{,}5\,\mathrm{g}/\mathrm{U}\)). 
+\[
+\bigl|\,\ICR_j^{(q)} - \ICR_j^{(q-1)}\,\bigr| \;\le\; \DICR,
+\qquad j \in \{f,m,a\},\;\; q=1,2,\dots
+\]
+
+\medskip
+\paragraph{Homogenität der ICRs}
+Um große Spreizungen zwischen den ICR-Werten zu vermeiden, wird ein sogenannter Guardrail eingeführt, der das Verhältnis zwischen dem größten und dem kleinsten ICR-Wert überwacht:
+
+\noindent Definiere
+\[
+r(x)\;=\;\frac{\max\{\ICRf,\ICRm,\ICRa\}}{\min\{\ICRf,\ICRm,\ICRa\}},
+\qquad
+\tilde r(x)\;=\;\max\{\,0,\,\ln r(x)-\ln \rmax\,\}.
+\]
+Der weiche Dispersions-Penalty lautet
+\[
+P_{\mathrm{disp}}(x)\;=\;\lambdadisp\,\tilde r(x)^{2},
+\]
+und geht additiv (mit negativem Vorzeichen) in die Zielfunktion ein:
+\[
+f_{\text{neu}}(x)\;=\;f(x)\;-\;P_{\mathrm{disp}}(x).
+\]
+
+\noindent Solange das Verhältnis \(r(x)\) unterhalb des Schwellenwerts \(\rmax = 1{,}8\) liegt, bleibt die Strafe null. Wird dieser Wert überschritten, wächst die Strafe quadratisch mit der logarithmischen Abweichung. Die logarithmische Skala sorgt dafür, dass eine gleichmäßige Verschiebung aller ICR-Werte das Verhältnis nicht beeinflusst – der Guardrail ist also maßstabsfrei. Die Gewichtung \(\lambdadisp = 0{,}05\) bestimmt die Stärke der Bestrafung. \\
+
+\paragraph{Zeit-im-Bereich-Grenzen}
+Zusätzlich werden Sicherheitskriterien eingeführt, die sicherstellen, dass eine Einstellung nicht zu gefährlichen Blutzuckerwerten führt. Diese Kriterien orientieren sich an etablierten Grenzwerten für die Zeit unter bzw. über dem Zielbereich (TBR/TAR). Sie greifen auf die simulierte Glukosekurve \(G_x(t)\) zurück und prüfen, ob bestimmte Schwellenwerte überschritten werden:
+
+\[
+\mathrm{TBR}_{<70}(x) := \int_0^T \Ind\{G_x(t)<70\}\,dt \;\le\; \tau_{<70},
+\]
+\[
+\mathrm{TBR}_{<54}(x) := \int_0^T \Ind\{G_x(t)<54\}\,dt \;\le\; \tau_{<54},
+\]
+\[
+\mathrm{TAR}_{>180}(x) := \int_0^T \Ind\{G_x(t)>180\}\,dt \;\le\; \tau_{>180}\quad \text{(optional)}.
+\]
+
+\noindent Die Grenzwerte \(\tau_{<70}\) und \(\tau_{<54}\) dienen dem Schutz vor Hypoglykämien und werden typischerweise streng gewählt. Der Wert \(\tau_{>180}\) kann optional als weicher Grenzwert für Hyperglykämien verwendet werden.
+
+\subsection{Quartalweise Auswertung}
+
+Die Gesamtbewertung erfolgt statt für einzelne Tage, aggregiert über ein Quartal. Sei \(\theta\) ein Tageszustand mit Verteilung \(\mathcal P_q\), dann ergibt sich die Bewertung über \(M\) simulierte Tage als:
+
+\[
+F_q(x) = \frac{1}{M} \sum_{i=1}^M f_{\text{day}}(x;\theta_i), \quad \theta_i \sim \mathcal P_q.
+\]
+
+Die Tagesbewertung \(f_{\text{day}}(x;\theta)\) entspricht der Zielfunktion mit \(T=24\,\mathrm{h}\). Die ICR-Werte \(x=(\ICRf,\ICRm,\ICRa)\) bleiben im Quartal \(q\) konstant und werden zum Quartalswechsel \(q-1\to q\) nur begrenzt angepasst:
+
+\[
+|\ICR_j^{(q)} - \ICR_j^{(q-1)}| \le \DICR \quad \text{für } j \in \{f,m,a\}.
+\]
+
+Dies entspricht der realen Praxis, in der Therapieparameter typischerweise quartalsweise überprüft und angepasst werden.
+
+\paragraph{Per-Fenster-Attribution der Zielfunktion}
+Seien \(\mathcal W_{\mathrm{Morgen}}, \mathcal W_{\mathrm{Mittag}}, \mathcal W_{\mathrm{Abend}}, \mathcal W_{\mathrm{Nacht}}\) die in den Simulationsregeln definierten Tagesfenster. Zur transparenten Zuordnung der Effekte der drei ICRs zerlegen wir die Zielfunktion fensterweise. Für \(j\in\{\mathrm{Morgen},\mathrm{Mittag},\mathrm{Abend},\mathrm{Nacht}\}\) definieren wir
+\[
+\mathrm{TIR}^{(j)}(x)\;:=\;\frac{1}{T}\int_{\mathcal W_j} \Ind\{70\le G_x(t)\le 180\}\,dt,
+\]
+\[
+P_{\mathrm{hypo}}^{(j)}(x)\;:=\;\frac{w_{\mathrm{hypo}}}{T}\int_{\mathcal W_j}\!\left(\frac{\max\{0,\,70-G_x(t)\}}{\Hhypo}\right)^{\!2}\, dt.
+\]
+\[
+P_{\mathrm{hyper}}^{(j)}(x)\;:=\;\frac{w_{\mathrm{hyper}}}{T}\int_{\mathcal W_j}\!\left(\frac{\max\{0,\,G_x(t)-180\}}{\Hhyper}\right)\, dt.
+\]
+\medskip
+
+\noindent Dann ergibt sich insgesamt die additive Zerlegung
+
+\newcommand{\Jfen}{\{\mathrm{Morgen},\mathrm{Mittag},\mathrm{Abend},\mathrm{Nacht}\}}
+\[
+f(x) \;=\; \sum_{\mathclap{j\in\Jfen}}\Bigl(\mathrm{TIR}^{(j)}(x) - P_{\mathrm{hypo}}^{(j)}(x) - P_{\mathrm{hyper}}^{(j)}(x)\Bigr).
+\]
+\medskip
+
+\noindent Interpretation: Die Beiträge aus \(\mathcal W_{\mathrm{Morgen}},\mathcal W_{\mathrm{Mittag}},\mathcal W_{\mathrm{Abend}}\) sind direkt den Parametern \(\ICRf,\ICRm,\ICRa\) zuordenbar; die Nacht trägt als Kontrollfenster ohne Mahlzeiten-ICR zur Gesamtbewertung bei.
+\medskip
+
+\paragraph{Sicherheitskriterien über mehrere Tage}
+Für die Time-Below-/Above-Range-Metriken mitteln wir analog über die \(M\) Tage. Mit \(\mathrm{TBR}^{(i)}_{<70}(x):=\int_0^T \Ind\{G^{(i)}_x(t)<70\}\,dt\) (und analog für \(<54\), \(>180\)) definieren wir
+\begin{align}
+\overline{\mathrm{TBR}}_{<70}(x)  &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TBR}^{(i)}_{<70}(x)  &&\le \tau_{<70},\\
+\overline{\mathrm{TBR}}_{<54}(x)  &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TBR}^{(i)}_{<54}(x)  &&\le \tau_{<54},\\
+\overline{\mathrm{TAR}}_{>180}(x) &:= \frac{1}{M}\sum_{i=1}^M \mathrm{TAR}^{(i)}_{>180}(x) &&\le \tau_{>180}\ \ \text{(optional)}.
+\end{align}
+\noindent Strenger (optional) kann statt des Mittels eine Worst-Case-Grenze genutzt werden, z.\,B. \(\max_i \mathrm{TBR}^{(i)}_{<70}(x)\le\tau_{<70}^{\text{strict}}\).
+
+
+% --- Notation (Kurzüberblick) -----------------------------------
+\FloatBarrier
+\begin{table}[p]
+\centering
+\caption{Notation (Kurzüberblick) für Symbole und Größen im Modell.}\label{tab:notation}
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.02}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.28\linewidth}X@{}}
+\hline
+\textbf{Symbol} & \textbf{Bedeutung} \\
+\hline
+$T$                         & Simulationshorizont; hier $T=24\,\mathrm{h}$ (00{:}00--24{:}00). \\
+$[0,T]$                     & Betrachtetes Zeitintervall eines Tages. \\
+$\Delta t$                  & Samplingintervall (z.\,B. $5\,\mathrm{min}$) für die diskrete Auswertung. \\
+$x=(\ICRf,\ICRm,\ICRa)$     & Entscheidungsvektor (ICR-Werte für Frühstück/Mittag/Abend). \\
+$G_x(t)$                    & Simulierte Glukosekurve unter Parametern $x$. \\
+$C(t)$                      & Angekündigte Kohlenhydrate [g] zum Zeitpunkt $t$ (für die Bolusberechnung). \\
+$\mathrm{TIR}_{70\text{--}180}(x)$ & Zeit im Zielbereich $[70,180]\,\mathrm{mg/dL}$. \\
+$w_{\mathrm{hypo}},\,w_{\mathrm{hyper}}$ & Gewichte der Strafterme (Hypo stärker als Hyper). \\
+$H_{\text{hypo}}$           & Normierung der Hypo-Tiefe; hier $H_{\text{hypo}}=\Hhypo$. \\
+$H_{\text{hyper}}$          & Normierung des Hyper-Überschusses; hier $H_{\text{hyper}}=\Hhyper$. \\
+$P_{\mathrm{hypo}}(x)$      & Quadratischer Strafterm für Unterzucker. \\
+$P_{\mathrm{hyper}}(x)$     & Linearer Strafterm für Überzucker. \\
+$\bar u_{\mathrm{basal}}$   & Konstante Basalrate mit $u_{\mathrm{basal}}(t)=\bar u_{\mathrm{basal}}$. \\
+$\tau_n$                    & Zeitpunkt der $n$-ten Bolusgabe (Ereigniszeit). \\
+$\Delta_{\min}$             & Mindestabstand zwischen Bolusgaben; hier $\Delta_{\min}=\Dtmin$. \\
+$\mathrm{tod}(t)$           & Tageszeitabbildung $t \mapsto t \bmod 24\,\mathrm{h}\in[0,24\,\mathrm{h})$. \\
+$r_{\text{screen}}$         & Harter Verhältnis-Screen (z. B. 2.0). \\
+$\mathcal W_{\mathrm{Morgen}}$, $\mathcal W_{\mathrm{Mittag}}$, $\mathcal W_{\mathrm{Abend}}$, $\mathcal W_{\mathrm{Nacht}}$ & Tageszeitfenster f\"ur Fr\"uhst\"uck/Mittag/Abend/Nacht (vgl. Simulationsregeln). \\
+$\ICR(t)$                  & Aktiver ICR zum Zeitpunkt $t$ (st\"uckweise konstant \"uber die Fenster). \\
+$\DICR$                    & Maximal zul\"assige \"Anderung je ICR pro Optimierungsrunde (Schrittbegrenzung). \\
+$r(x),\,\tilde r(x)$      & Verh\"altnis $\max/\min$ der ICRs und logarithmische \"Uberschreitung f\"ur den Guardrail. \\
+$\rmax,\,\lambdadisp$    & Schwellwert des Verh\"altnisses bzw. Gewicht der Dispersionsstrafe. \\
+% --- Neue Zeilen: Gauß-Batch-Notation ---
+$\mathcal B(x)$           & Gau{\ss}\-Batch an Vorschl\"agen um $x$ (stochastische Kandidatenbildung). \\
+$B$                        & Batchgr\"o\ss e der Gau{\ss}\-Proposals pro Iteration (z.\,B. 8). \\
+$p(\text{G1}),\,p(\text{G2})$ & Auswahlwahrscheinlichkeiten f\"ur Einzel\-Gen vs. gemeinsamen Shift (z.\,B. 0.8\,/\,0.2). \\
+$\rho_{\mathrm{mut}}$           & Mutationsrate pro Iteration (Wahrscheinlichkeit, dass mutiert wird; Standard: $0{,}3$). \\
+$\tau_{<70},\,\tau_{<54},\,\tau_{>180}$ & Sicherheitsgrenzen f\"ur TBR(<70), TBR(<54), TAR(>180) (z.\,B. in h/Tag oder \%). \\
+$P_{\mathrm{disp}}(x)$    & Dispersions\,–\,Penalty (weiche Homogenit\"atsstrafe). \\
+$F_q(x)$                  & Quartalsbewertung (Szenario\,–\,Mittel \"uber $M$ Tage). \\
+$\mathcal P_q$            & Verteilung der Tageszust\"ande im Quartal $q$. \\
+$M$                       & Anzahl simulierte Tage im Quartal. \\
+$f_{\text{day}}(x;\theta)$ & Tageszielwert f\"ur Zustand $\theta$. \\
+$\mathrm{TBR}_{<70}(x)$, $\mathrm{TBR}_{<54}(x)$, $\mathrm{TAR}_{>180}(x)$ & Zeiten unter/\"uber Bereich (Sicherheitskriterien). \\
+$B_{\mathrm{meal}}(t)$   & Mahlzeitenbolus $=C(t)/\ICR(t)$. \\
+\hline
+\end{tabularx}
+\end{table}
+\FloatBarrier
