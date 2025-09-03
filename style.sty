@@ -9,7 +9,7 @@
 %% erst wirksam, wenn die Format-Datei neu erzeugt wurde!!!
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{Bachelorarbeit}[2017/10/06 v1.2]
+\ProvidesPackage{style}[2017/10/06 v1.2]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% needed packages
@@ -17,9 +17,12 @@
 \usepackage[utf8]{inputenc}   % UTF8-Codierung
 \usepackage[section]{placeins}
 \usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage[final]{microtype}
 \usepackage{listings}
 \usepackage{color}
-\usepackage[english, ngerman]{babel}      % Sprachanpassungen für generierte Texte wie "Inhaltsverzeichnis" etc
+\usepackage[main=ngerman,english]{babel}    % Sprachanpassungen für generierte Texte wie "Inhaltsverzeichnis" etc
 \usepackage[T1]{fontenc}% Interne LaTeX Codierungen
 \usepackage[dvipsnames,table]{xcolor} % Extending L A TEX’s color facilities
 \usepackage[babel, german=guillemets]{csquotes}   % Context sensitive quotation facilities.
@@ -30,18 +33,25 @@
 \usepackage{needspace}  % http://www.tex.ac.uk/cgi-bin/texfaq2html?label=nopagebrk
 \usepackage[hidelinks,bookmarksopen,bookmarksnumbered]{hyperref}
 \usepackage{bookmark}   % Bookmarks for hyperref
+\usepackage{chngcntr}
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\makeatletter
+\providecommand*{\theHfigure}{\thesection.\arabic{figure}}
+\providecommand*{\theHtable}{\thesection.\arabic{table}}
+\makeatother
 \usepackage{graphicx}
 \usepackage[headings]{fullpage}
 \usepackage{fancyhdr}
 \usepackage{url}
 \usepackage{lmodern}    % Computern-Modern Schriftfamilie
-\usepackage{amssymb}    % Symbole
 \usepackage{framed}     % Framed or shaded regions that can break across pages.
 		        % http://dante.ctan.org/tex-archive/help/Catalogue/entries/framed.html
 			% Benutzung siehe erklaerung.tex
 
 \usepackage{wrapfig}    % Bilder von textumfliessen lassen
 
+\setlength{\marginparwidth}{2cm}
 \usepackage[colorinlistoftodos]{todonotes}
                         % Einfache Verwaltung und Erstellung von TODO's Markierungen
 			% http://tug.ctan.org/tex-archive/macros/latex/contrib/todonotes/
@@ -69,7 +79,8 @@
 	style=ieee,
         backend=bibtex,
 	sorting=nty]{biblatex}  % http://dante.ctan.org/tex-archive/help/Catalogue/entries/biblatex.html
-\renewcommand{\mkbibnamelast}[1]{\textsc{#1}}
+\renewcommand{\mkbibnamefamily}[1]{\textsc{#1}}
+
 
 % Abstand der einzelnen Einträge in der Literaturangaben
 \renewcommand{\bibitemsep}{1ex}
@@ -188,7 +199,7 @@
 % auskommentieren
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{float}
-\newfloat{eq}{H}{for}[chapter]
+\newfloat{eq}{H}{for}[section]
 \newcommand{\forname}{Formelverzeichnis}
 \newcommand{\listofequations}{\listof{eq}{\forname}}
 
