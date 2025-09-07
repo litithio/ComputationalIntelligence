@@ -1,6 +1,6 @@
 \section{Formale Modellierung} \label{modellierung}
 
-Die formale Modellierung definiert, welche Parameter angepasst werden (Entscheidungsvariable) und wie deren Qualität bewertet wird (Zielfunktion). Die Bewertung erfolgt simulationsgestützt über einen digitalen Zwilling, wobei die Blutzuckerverläufe unter verschiedenen ICR-Einstellungen analysiert werden. Die folgende Abbildung \ref{fig:überblick} veranschaulicht den Zusammenhang zwischen Entscheidungsvariable, Simulation und Bewertung. Tabelle \ref{tabelle_notation} führt alle in der Modellierung verwendeten Symbole und Größen auf.
+Die formale Modellierung definiert, welche Parameter angepasst werden (Entscheidungsvariable) und wie deren Qualität bewertet wird (Zielfunktion). Die Bewertung erfolgt simulationsgestützt über einen digitalen Zwilling, wobei die Blutzuckerverläufe unter verschiedenen ICR-Einstellungen analysiert werden. Die folgende Abbildung \ref{fig:überblick} veranschaulicht den Zusammenhang zwischen Entscheidungsvariable, Simulation und Bewertung. Tabelle \ref{tab:notation} führt alle in der Modellierung verwendeten Symbole und Größen auf.
 
 \begin{figure}[h!]
     \centering
@@ -42,6 +42,7 @@ x = (\ICRf,\ \ICRm,\ \ICRa)^\top \in \mathbb{R}^3.
 5 \le \mathrm{ICR}_j \le 30 \quad \text{für } j \in \{f,m,a\}.
 \]
 
+\noindent Die konservativen Plausibilitätsgrenzen lassen sich aus der etablierten 500-Regel (ICR \(\approx 500/\)TDD) in Verbindung mit typischen Gesamttagesdosen (ca. 0{,}4--1{,}0\,U/kg/Tag) herleiten; vgl.\ \cite{walsh2016pumping,cengiz2022ispad,ada2024standards}.
 \noindent Diese Grenzen erfüllen mehrere Funktionen: Sie gewährleisten die \textbf{klinische Plausibilität}, da typische ICR-Werte bei Erwachsenen meist zwischen 10 und 20 g/U liegen – Faktoren außerhalb eines Bereichs von 5–30 g/U sind selten und deuten auf eine Sondersituation (ausgeprägte Insulinresistenz oder Infekte) hin. Gleichzeitig dienen sie der \textbf{Sicherheit}, indem sie extrem hohe oder niedrige Werte vermeiden, die zu gefährlichen Bolusdosen führen könnten. Schließlich tragen sie zur \textbf{numerischen Stabilität} bei, indem sie den Suchraum begrenzen und die Kalibrierung der Zielfunktion erleichtern.
 \noindent Die Grenzen können \emph{patientenspezifisch angepasst} werden (z.\,B. 6-24 g/U), falls klinische Daten abweichende Bereiche nahelegen.
 
@@ -152,7 +153,7 @@ Für die Time-Below-/Above-Range-Metriken mitteln wir analog über die \(M\) Tag
 \FloatBarrier
 \begin{table}[p]
 \centering
-\caption{Notation (Kurzüberblick) für Symbole und Größen im Modell.}\label{tab:notation}
+\caption{Notation für Symbole und Größen im Modell.}\label{tab:notation}
 \footnotesize
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{1.02}

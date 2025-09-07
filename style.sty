@@ -72,15 +72,17 @@
 % Wer etwas mehr "Kontrolle" über das Aussehen der Referenzen haben möchte, kann
 % auch das "biblatex"-Paket benutzen.
 \usepackage{etoolbox}  % http://dante.ctan.org/tex-archive/help/Catalogue/entries/etoolbox.html
-\usepackage[
-	hyperref=true,          % Klickbare Referenzen in der PDF-Datei
-        backref=true,           % In der Literaturref. die Seiten angeben, wo ein \cite dazu steht
-        bibencoding=inputenc,   % s. inputenc-Paket
-	style=ieee,
-        backend=bibtex,
-	sorting=nty]{biblatex}  % http://dante.ctan.org/tex-archive/help/Catalogue/entries/biblatex.html
+\RequirePackage[
+    backend=biber,
+    style=ieee,
+    sorting=none,
+    backref=true
+]{biblatex}
+\DefineBibliographyStrings{ngerman}{
+  backrefpage  = {zitiert auf S.},
+  backrefpages = {zitiert auf S.},
+}
 \renewcommand{\mkbibnamefamily}[1]{\textsc{#1}}
-
 
 % Abstand der einzelnen Einträge in der Literaturangaben
 \renewcommand{\bibitemsep}{1ex}
