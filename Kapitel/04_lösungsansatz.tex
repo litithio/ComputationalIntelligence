@@ -2,20 +2,20 @@
 \newcommand{\sigmaloc}{\sigma_{\text{loc}}}
 
 \section{Lösungsansatz}
-Zur Optimierung der Insulin-Kohlenhydrat-Verhältnisse wird ein auf stochastischer Mutation basierter Lösungsansatz gewählt. Neue Kandidaten werden durch Gauß-Mutationen von Einzel- oder Gesamtgenen unter Einhaltung von Wert- und Schrittbegrenzungen erzeugt. Ein Screening schließt unzulässige Kandidaten vor der Simulation aus. Die Bewertung erfolgt quartalsweise auf Basis der zuvor in Kapitel \ref{modellierung} definierten Zielfunktion. Algorithmus \ref{algorithmus} veranschaulicht den Ablauf der Optimierung.
+Zur Optimierung der Insulin-Kohlenhydrat-Verhältnisse wird ein auf stochastischer Mutation basierter Lösungsansatz gewählt. Neue Kandidaten werden durch Gauß-Mutationen von einzelnen oder allen Genen gemeinsam unter Einhaltung von Wert- und Schrittbegrenzungen erzeugt. Ein Screening schließt unzulässige Kandidaten vor der Simulation aus. Die Bewertung erfolgt quartalsweise auf Basis der zuvor in Kapitel \ref{modellierung} definierten Zielfunktion. Algorithmus \ref{algorithmus} veranschaulicht den Ablauf der Optimierung.
 
 \subsection{Mutationsoperatoren} \label{Mutationsoperatoren}
 Zur Anpassung der Insulin-Kohlenhydrat-Verhältnisse (ICR) verwenden wir zwei Gauß-basierte Mutationsoperatoren, die klinisch plausible Änderungen ermöglichen und Sicherheitsgrenzen respektieren:
 \begin{itemize}
-  \item[\textbf{G1}] \textbf{Einzel-Gen (Gauß):} Wähle \(j\in\{f,m,a\}\) gleichverteilt. Ziehe \(\delta \sim \mathcal N(0,\sigmaloc^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(\ICR'_j=\ICR_j+\delta\) und lasse die anderen Gene unverändert; projiziere dann \(x'\) komponentenweise auf \([5,30]\).
-  \item[\textbf{G2}] \textbf{Gemeinsamer Shift (Gauß):} Ziehe \(\delta \sim \mathcal N(0,\sigmaall^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(x' = x + \delta\,\mathbf{1}\) und projiziere auf \([5,30]^3\).
+  \item[\textbf{G1}] \textbf{Einzelanpassung (Gauß):} Wähle \(j\in\{f,m,a\}\) gleichverteilt. Ziehe \(\delta \sim \mathcal N(0,\sigmaloc^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(\ICR'_j=\ICR_j+\delta\) und lasse die anderen Gene unverändert; projiziere dann \(x'\) komponentenweise auf \([5,30]\).
+  \item[\textbf{G2}] \textbf{Gemeinsamer Shift (Gauß):} Ziehe \(\delta \sim \mathcal N(0,\sigmaall^{2})\), trunkiert auf \([-\DICR,\DICR]\). Setze \(x' = x + \delta\,\mathbf{1}\), wobei \(\mathbf{1}=(1,1,1)^\top\) der Einsvektor ist, und projiziere auf \([5,30]^3\).
 \end{itemize}
-\emph{Notation:} \(\Pi_{[a,b]}\) bezeichnet die Projektion auf das Intervall \([a,b]\); \(\Pi_{[5,30]^3}\) ist die komponentenweise Projektion auf das kartesische Produkt.\\
+\emph{Notation:} \(\Pi_{[a,b]}\) bezeichnet die Projektion auf das Intervall \([a,b]\); \(\Pi_{[5,30]^3}\) ist die komponentenweise Projektion auf das kartesische Produkt. (siehe Clipping in Algorithmus \ref{algorithmus})\\
 Beide Operatoren respektieren die Box-Grenzen $[5, 30]$ g/U sowie die Schrittbegrenzung $\Delta \text{ICR}$ pro Optimierungsrunde. \\
 
-\noindent Der gemeinsame Shift (G2) reflektiert reale, systemweite Veränderungen des Insulinbedarfs. Akute Infekte, Fieber, Stress oder bestimmte Medikamente erhöhen beispielsweise den Insulinbedarf. Ein solcher globaler Anstieg des Insulinbedarfs bildet sich in sinkenden ICR-Werten ab. Umgekehrt führen mehr Bewegung, Gewichtsverlust oder eine gesteigerte Insulinsensitivität dazu, dass der Bedarf sinkt und die ICR-Werte steigen. Die Homogenitätsstrafe $P_{\text{disp}}(x)$ verhindert übermäßige Spreizung der ICR-Werte durch eine logarithmisch skalierte Penalty, die bei Überschreitung eines maximalen Verhältnisses $r_{\text{max}}$ greift. Einzel-Gen-Mutationen (G1) können dieses Verhältnis stärker beeinflussen und aktivieren gegebenenfalls die Strafe.
+\noindent Der gemeinsame Shift (G2) reflektiert reale, systemweite Veränderungen des Insulinbedarfs. Akute Infekte, Fieber, Stress oder bestimmte Medikamente erhöhen beispielsweise den Insulinbedarf \cite{ada2024standards,cengiz2022ispad}. Ein solcher globaler Anstieg des Insulinbedarfs bildet sich in sinkenden ICR-Werten ab. Umgekehrt führen mehr Bewegung, Gewichtsverlust oder eine gesteigerte Insulinsensitivität dazu, dass der Bedarf sinkt und die ICR-Werte steigen. Die Homogenitätsstrafe $P_{\text{disp}}(x)$ verhindert übermäßige Spreizung der ICR-Werte durch eine logarithmisch skalierte Penalty, die bei Überschreitung eines maximalen Verhältnisses $r_{\text{max}}$ greift. Einzel-Gen-Mutationen (G1) können dieses Verhältnis stärker beeinflussen und aktivieren gegebenenfalls die Strafe.
 
-\subsection{Stochastische Kandidatenbildung: GaussianBatchProposals}
+\subsection{Stochastische Kandidatenbildung}
 Pro Iteration erzeugen wir einen stochastischen \emph{Batch} von $B$ Kandidaten um den aktuellen Elternvektor $x$, basierend auf den Gau{\ss}-Mutationen aus Abschnitt \ref{Mutationsoperatoren}. Die Kandidatenbildung läuft wie folgt ab:
 \begin{itemize}
   \item Ziehe f\"ur jedes der $B$ Elemente unabh\"angig einen Operator: G1 (Einzel-Gen) mit Wahrscheinlichkeit $p(\mathrm{G1})$ oder G2 (gemeinsamer Shift) mit $p(\mathrm{G2})$ (Mögliche Wahrscheinlichkeitsverteilungen für $p(\mathrm{G1})$/$p(\mathrm{G2})$ sind: $0{,}8/0{,}2$).
@@ -51,7 +51,7 @@ Die gesamte Optimierung erfolgt gemäß Algorithmus~\ref{algorithmus}, der die M
 \State
 \Function{MutateG2}{$x$}
   \State Ziehe $\delta \sim \mathcal{N}(0, \sigma_{\text{all}}^2)$, trunkiert auf $[-\Delta ICR, \Delta ICR]$
-  \State $x' \gets \text{clip}(x + \delta \cdot (1, 1, 1), 5, 30)$
+  \State $x' \gets \text{clip}(x + \delta \cdot \mathbf{1}, 5, 30)$
   \State \Return $x'$
 \EndFunction
 \State

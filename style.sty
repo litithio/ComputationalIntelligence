@@ -170,21 +170,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Programmlistings setzen
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{listings}   % http://www.ctan.org/tex-archive/macros/latex/contrib/listings/
 
-% Wie sollen die Überschriften benannt werden:
-\renewcommand{\lstlistingname}{Algorithmus}
+% Deutsche Bezeichner für Listings (sprachsensitiv)
+\addto\captionsngerman{%
+  \renewcommand{\lstlistingname}{Listing}%
+  \renewcommand{\lstlistlistingname}{Listingverzeichnis}%
+}
 
-% Wie die Liste der Listings, s. \lstlistoflistings in bericht.tex
-\renewcommand{\lstlistlistingname}{Liste der Algorithmen}
-
-% So kann man einen Stil für alle  Algorithmen definieren
-\lstdefinestyle{algoBericht}{
-  numbers=left,              % Zeilennummern einfügen
-  numberstyle=\tiny,         % wie werden sie gesetzt
-  numbersep=5pt,             % Abstand der Nummern zum Text
-  numberblanklines=false,    % bei Leerzeilen keine Nummer ausgeben (aber zählen)
-  basicstyle=\sffamily\small,         % Wie soll der Algorithmus gesetzt werden
+% Deutsche Bezeichner für den Algorithmus-Gleitobjekttyp (aus dem Paket `algorithm`)
+\AtBeginDocument{%
+  \providecommand{\listalgorithmname}{Algorithmenverzeichnis}%
+  \floatname{algorithm}{Algorithmus}%
 }
 
 

@@ -18,7 +18,7 @@ Korrekturboli, sofern im Zwilling aktiviert, sind nicht Teil der Entscheidungsva
 
 \subsection{Annahmen der Simulation}
 
-Zur Vermeidung von Bolus-Stacking wird ein Mindestabstand \(\Dtmin\) zwischen zwei Bolusgaben definiert (hier: \(30\,\mathrm{min}\)). Die Bolusereignisse sind durch ihre Zeitpunkte \(\tau_1 < \tau_2 < \dots < \tau_N\) auf dem Intervall \([0,T]\) beschrieben. Die folgende Bedingung stellt sicher, dass zwischen zwei Gaben ausreichend Zeit liegt:
+Zur Vermeidung von Bolus-Stacking wird ein Mindestabstand von \(\Dtmin\)\cite{cengiz2022ispad,ada2024standards,walsh2016pumping} zwischen zwei Bolusgaben definiert. Die Bolusereignisse sind durch ihre Zeitpunkte \(\tau_1 < \tau_2 < \dots < \tau_N\) auf dem Intervall \([0,T]\) beschrieben. Die folgende Bedingung stellt sicher, dass zwischen zwei Gaben ausreichend Zeit liegt:
 \[
 \tau_{n+1} - \tau_n \;\ge\; \Dtmin \qquad \forall\, n=1,\dots,N-1.
 \]
@@ -44,10 +44,6 @@ Die Insulin-Kohlenhydrat-Verhältnisse sind stückweise konstant über diese Fen
 \]
 In der Nacht \(\mathcal{W}_{\mathrm{Nacht}}\) werden keine Mahlzeitenboli verabreicht.
 
-Die Basalrate ist konstant und liefert den Hintergrundbedarf gemäß:
-\[
-u_{\mathrm{basal}}(t)=\ubasal \quad \text{für alle } t \in [0,T].
-\]
-Sie stabilisiert den nüchternen Glukoseverlauf und bleibt über das Quartal hinweg unverändert, sodass der Optimierer ausschließlich die Effekte der Mahlzeitenfaktoren \(\ICR_f, \ICR_m, \ICR_a\) lernt. Tageszeitlich variierende Basalprofile oder automatische Anpassungen (AID) sind bewusst deaktiviert, können aber in zukünftigen Erweiterungen berücksichtigt werden.
+Die Basalrate stabilisiert den nüchternen Glukoseverlauf und bleibt über das Quartal hinweg unverändert, sodass der Optimierer ausschließlich die Effekte der Mahlzeitenfaktoren \(\ICR_f, \ICR_m, \ICR_a\) lernt.
 
 Der digitale Zwilling wird kontinuierlich nachtrainiert, um auch bei physiologischen Veränderungen ein möglichst realistisches Abbild des individuellen Patientenprofils zu gewährleisten.
